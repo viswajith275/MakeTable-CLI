@@ -299,9 +299,30 @@ class TimeTableGenerator:
 
                     self.model.add(sum(vars_for_week) >= min_limit - slack)
 
-    
+        
     def _subject_max_consecutive(self):
-        pass
+        for c_id, subjects in self.class_subject_schedule.items():
+            for sub_id, vars_for_subject in subjects.items():
+
+                subject = self.subjectss_dict[sub_id]
+                max_limit = subject.constraints.max_consecutive
+
+                if max_limit is not None:
+
+                    for day in self.days:
+
+                        vars_for_day = vars_for_subject[day]
+
+                        for i in range(len(vars_for_day) - max_limit + 1):
+                            error_msg = f"Max consecutive classes exceeded for {subject.name} (limit: {max_limit})"
+                            slack = self._create_slack(
+                                name="subject maximum consecutive class",
+                                error_msg=error_msg,
+                                weight=250,
+                                upper_bound=1
+                            )
+
+                            self.model.add(sum(vars_for_day[i : i + max_limit + 1]) <= max_limit + slack)
 
     def _subject_min_consecutive(self):
         pass
