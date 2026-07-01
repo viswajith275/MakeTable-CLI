@@ -14,7 +14,7 @@ class TimeTableGenerator:
     def __init__(self, RawData: TimeTableGenerationInput) -> None:
 
         self.teachers_dict = {t.id: t for t in RawData.teachers}
-        self.subjectss_dict = {s.id: s for s in RawData.subjects}
+        self.subjects_dict = {s.id: s for s in RawData.subjects}
         self.rooms_dict    = {r.id: r for r in RawData.rooms}
         self.classes_dict  = {c.id: c for c in RawData.classes}
 
@@ -31,6 +31,12 @@ class TimeTableGenerator:
 
         self.assignments = RawData.teacher_assignments
 
+        self.MorningTendencyValues = {
+            'Low':-1,
+            'Med':1,
+            'High':2
+        }
+
         self.index_to_day: dict[int, WeekDay] = {
             i: d for i, d in enumerate(WeekDay)
         }
@@ -38,6 +44,7 @@ class TimeTableGenerator:
             d: i for i, d in enumerate(WeekDay)
         }
         self.vars = {}
+
 
         # Change values accordingly for better performaces (Dont forget)
 
@@ -111,9 +118,6 @@ class TimeTableGenerator:
                     else:
                         self.model.add(sum(variables_at_this_time) <= room_capacity)
 
-        
-    def _apply_teacher_constraints(self):
-        pass
 
     def _teacher_max_per_day(self):
         # max_per_day teacher
@@ -196,10 +200,6 @@ class TimeTableGenerator:
                         )
 
                         self.model.add(sum(vars_for_consecutive) <= max_limit + slack)
-    
-
-    def _apply_subject_constraints(self):
-        pass
 
     
     def _subject_max_per_day(self):
@@ -207,7 +207,7 @@ class TimeTableGenerator:
         for c_id, subjects in self.class_subject_schedule.items():
             for sub_id, vars_for_subject in subjects.items():
 
-                subject = self.subjectss_dict[sub_id]
+                subject = self.subjects_dict[sub_id]
                 max_limit = subject.constraints.max_per_day
 
                 if max_limit is not None:
@@ -231,10 +231,10 @@ class TimeTableGenerator:
         for c_id, subjects in self.class_subject_schedule.items():
             for sub_id, vars_for_subject in subjects.items():
 
-                subject = self.subjectss_dict[sub_id]
+                subject = self.subjects_dict[sub_id]
                 min_limit = subject.constraints.min_per_day
 
-                if min_limit is not None:
+                if min_limit is not None and min_limit > 1:
 
                     for day in self.days:
 
@@ -255,7 +255,7 @@ class TimeTableGenerator:
         for c_id, subjects in self.class_subject_schedule.items():
             for sub_id, vars_for_subject in subjects.items():
 
-                subject = self.subjectss_dict[sub_id]
+                subject = self.subjects_dict[sub_id]
                 max_limit = subject.constraints.max_per_week
 
                 if max_limit is not None:
@@ -280,7 +280,7 @@ class TimeTableGenerator:
         for c_id, subjects in self.class_subject_schedule.items():
             for sub_id, vars_for_subject in subjects.items():
 
-                subject = self.subjectss_dict[sub_id]
+                subject = self.subjects_dict[sub_id]
                 min_limit = subject.constraints.min_per_week
 
                 if min_limit is not None:
@@ -304,7 +304,7 @@ class TimeTableGenerator:
         for c_id, subjects in self.class_subject_schedule.items():
             for sub_id, vars_for_subject in subjects.items():
 
-                subject = self.subjectss_dict[sub_id]
+                subject = self.subjects_dict[sub_id]
                 max_limit = subject.constraints.max_consecutive
 
                 if max_limit is not None:
@@ -325,16 +325,146 @@ class TimeTableGenerator:
                             self.model.add(sum(vars_for_day[i : i + max_limit + 1]) <= max_limit + slack)
 
     def _subject_min_consecutive(self):
-        pass
+        # min_consecutive subject
+        for c_id, subjects in self.class_subject_schedule.items():
+            for sub_id, var_for_subject in subjects.items():
+
+                subject = self.subjects_dict[sub_id]
+                min_limit = subject.constraints.min_consecutive
+
+                if min_limit is not None:
+                    for day in self.days:
+
+                        vars_for_day = var_for_subject[day]
+                        len_of_var = len(vars_for_day)
+
+                        if len_of_var == 0:
+                            continue
+
+                        error_msg = (
+                            f"Min consecutive classes didnt met for {subject.name} (required: {min_limit})"
+                        )
+
+                        for i in range(len_of_var):
+
+                            is_start = self.model.new_bool_var(
+                                f"blk_start_{c_id}_{sub_id}_{day}_{i}"
+                            )
+
+                            curr = vars_for_day[i]
+                            if i == 0:
+
+                                self.model.add(is_start == curr)
+
+                            else:
+
+                                prev = vars_for_day[i - 1]
+
+                                self.model.add_bool_and( [curr, prev.Not()] ).OnlyEnforceIf(is_start)
+
+                                self.model.add_bool_or( [curr.Not(), prev] ).OnlyEnforceIf(is_start.Not())
+
+
+                            for k in range(1, min_limit):
+                                j = i + k
+                                slack = self.create_slack(
+                                    name="subject min consecutive",
+                                    error_msg=error_msg,
+                                    weight=270,
+                                    upper_bound=1,
+                                )
+                                if j < len_of_var:
+
+                                    self.model.add( vars_for_day[j] + slack >= 1 ).OnlyEnforceIf(is_start)
+
+                                else:
+
+                                    self.model.add(slack >= 1).OnlyEnforceIf(is_start)    
 
     def _subject_morning_tendency(self):
-        pass    
+        # morning_tendency subject
+        for c_id, subjects in self.class_subject_schedule.items():
+            for sub_id, vars_for_subject in subjects.items():
 
-    def _apply_teacher_assignment_constraints(self):
-        pass
+                subject = self.subjects_dict[sub_id]
+                tendency = subject.constraints.morning_tendency
+
+                if tendency is not None:
+
+                    multiplier = self.MorningTendencyValues.get(tendency.value)
+
+                    for day in self.days:
+                        vars_for_day = vars_for_subject[day]
+                        n = len(vars_for_day)
+
+                        if n == 0:
+                            continue
+
+                        for slot_index, var in enumerate(vars_for_day):
+
+                            lateness = slot_index / (n - 1) if n > 1 else 0
+                            if lateness == 0:
+                                continue
+
+                            cost = multiplier * lateness
+
+                            scaled_cost = round(cost * 10)
+
+                            self.silent_minimization.append(scaled_cost * var)
+
 
     def _teacher_assignment_first_slot_days(self):
-        pass
+        FIRST_SLOT_INDEX = 0
+        # first_slot_days teacher_assignment
+        for assigment in self.assignments:
+            first_slot_days = assigment.constraints.first_slot_days
+            if not first_slot_days:
+                continue
 
-    def solve_and_output(self):
-        pass
+            vars_for_assignment = self.assignment_vars.get(assigment.id)
+            if vars_for_assignment is None:
+                continue
+
+            for day in first_slot_days:
+
+                day = self.day_to_index.get(day)
+                if day is None or day not in self.days:
+                    continue
+
+                vars_for_day = vars_for_assignment.get(day)
+                if not vars_for_day or FIRST_SLOT_INDEX not in vars_for_day:
+                    continue
+
+                first_slot_var = vars_for_day[FIRST_SLOT_INDEX]
+
+                error_msg = (
+                    f"Assignment {assigment.id} required at first slot"
+                )
+                slack = self.create_slack(
+                    name="assignment first slot required",
+                    error_msg=error_msg,
+                    weight=250,
+                    upper_bound=1,
+                )
+
+                self.model.add(first_slot_var + slack >= 1)
+
+    def _apply_teacher_constraints(self):
+        # Applying teacher constraints
+        self._teacher_max_per_day()
+        self._teacher_max_per_week()
+        self._teacher_max_consecutive()
+
+    def _apply_subject_constraints(self):
+        # Applying subject constraints
+        self._subject_max_per_day()
+        self._subject_min_per_day()
+        self._subject_max_per_week()
+        self._subject_min_per_week()
+        self._subject_max_consecutive()
+        self._subject_min_consecutive()
+        self._subject_morning_tendency()
+
+    def _apply_teacher_assignment_constraints(self):
+        # Apply assignment constraints
+        self._teacher_assignment_first_slot_days()
