@@ -2,6 +2,7 @@ from ortools.sat.python import cp_model
 from dataclasses import dataclass
 from models import TimeTableGenerationInput, WeekDay
 import collections
+from typing import List, Dict
 
 @dataclass
 class SlackTracker:
@@ -12,6 +13,8 @@ class SlackTracker:
 
 class TimeTableGenerator:
     def __init__(self, RawData: TimeTableGenerationInput) -> None:
+
+        self.ASSIGNMENT_WEIGHT = 10
 
         self.teachers_dict = {t.id: t for t in RawData.teachers}
         self.subjects_dict = {s.id: s for s in RawData.subjects}
@@ -43,18 +46,40 @@ class TimeTableGenerator:
         self.day_to_index: dict[WeekDay, int] = {
             d: i for i, d in enumerate(WeekDay)
         }
-        self.vars = {}
-
 
         # Change values accordingly for better performaces (Dont forget)
 
-        self.error_slacks: dict[str, SlackTracker] = {}
+        self.error_slacks: Dict[str, SlackTracker] = {}
         self.slack_counter: int = 0
         self.silent_minimization: list = []
 
-    def _create_slack(
-        self, name: str, weight: int, error_msg: str, upper_bound: int
-    ) -> cp_model.IntVar:
+    
+    def _minimize_gaps(self, schedule_dict: dict, label: str, weight: int = 3) -> None:
+        # minimize gap in teachers/classes
+        for entity_id, vars_for_entity in schedule_dict.items(): # Either classes/teachers
+            for day in self.days:
+                slot_vars = vars_for_entity[day]
+                n = len(slot_vars)
+                if n < 3:
+                    continue
+
+                for i in range(1, n - 1):
+
+                    is_gap = self.model.new_bool_var(f"gap_{label}_{entity_id}_{day}_{i}")
+
+                    occupied_before = self.model.new_bool_var(f"before_{label}_{entity_id}_{day}_{i}")
+                    occupied_after = self.model.new_bool_var(f"after_{label}_{entity_id}_{day}_{i}")
+
+                    self.model.add_max_equality(occupied_before, slot_vars[:i])
+                    self.model.add_max_equality(occupied_after, slot_vars[i + 1:])
+
+                    self.model.add_bool_and([slot_vars[i].Not(), occupied_before, occupied_after]).OnlyEnforceIf(is_gap)
+                    self.model.add_bool_or([slot_vars[i], occupied_before.Not(), occupied_after.Not()]).OnlyEnforceIf(is_gap.Not())
+
+                    self.silent_minimization.append(weight * is_gap)
+
+
+    def _create_slack(self, name: str, weight: int, error_msg: str, upper_bound: int, ) -> cp_model.IntVar:
         self.slack_counter += 1
 
         unique_key = f"{name}_{self.slack_counter}"
@@ -69,7 +94,7 @@ class TimeTableGenerator:
 
         return slack_var
 
-    def _create_and_apply_variables(self):
+    def _create_and_apply_variables(self) -> None:
 
         for assignment in self.assignments:
             
@@ -91,7 +116,7 @@ class TimeTableGenerator:
                     self.assignment_vars[assignment.id][day][slot] = var
     
 
-    def _apply_generic_conditions(self):
+    def _apply_generic_conditions(self) -> None:
 
         for day in self.days:
             for slot in range(self.slots):
@@ -119,7 +144,7 @@ class TimeTableGenerator:
                         self.model.add(sum(variables_at_this_time) <= room_capacity)
 
 
-    def _teacher_max_per_day(self):
+    def _teacher_max_per_day(self) -> None:
         # max_per_day teacher
         for t_id, schedule_grid in self.teacher_schedule.items():
             teacher = self.teachers_dict[t_id]
@@ -144,7 +169,7 @@ class TimeTableGenerator:
                     self.model.add(sum(vars_for_this_day) <= max_limit + slack)
 
 
-    def _teacher_max_per_week(self):
+    def _teacher_max_per_week(self) -> None:
         # max_per_week teacher
         for t_id, schedule_grid in self.teacher_schedule.items():
 
@@ -169,7 +194,7 @@ class TimeTableGenerator:
                 self.model.add(sum(vars_for_week) <= max_limit + slack)
     
 
-    def _teacher_max_consecutive(self):
+    def _teacher_max_consecutive(self) -> None:
         # max_consecutive teacher
         for t_id, schedule_grid in self.teacher_schedule.items():
 
@@ -201,8 +226,33 @@ class TimeTableGenerator:
 
                         self.model.add(sum(vars_for_consecutive) <= max_limit + slack)
 
+
+    def _teacher_balance_daily_load(self, weight: int = 5):
+        # balance_periods teacher
+        for teacher_id, vars_for_teacher in self.teacher_schedule.items():
+            daily_counts = []
+            for day in self.days:
+                vars_for_day = vars_for_teacher[day]
+                if not vars_for_day:
+                    continue
+                count = self.model.new_int_var(0, len(vars_for_day), f"load_{teacher_id}_{day}")
+                self.model.add(count == sum(vars_for_day))
+                daily_counts.append(count)
+
+            if len(daily_counts) < 2:
+                continue
+
+            max_load = self.model.new_int_var(0, self.slots and len(self.slots), f"maxload_{teacher_id}")
+            min_load = self.model.new_int_var(0, self.slots and len(self.slots), f"minload_{teacher_id}")
+            self.model.add_max_equality(max_load, daily_counts)
+            self.model.add_min_equality(min_load, daily_counts)
+
+            spread = self.model.new_int_var(0, len(self.slots), f"spread_{teacher_id}")
+            self.model.add(spread == max_load - min_load)
+            self.silent_minimization.append(weight * spread)
+
     
-    def _subject_max_per_day(self):
+    def _subject_max_per_day(self) -> None:
         # max_per_day subject
         for c_id, subjects in self.class_subject_schedule.items():
             for sub_id, vars_for_subject in subjects.items():
@@ -226,7 +276,7 @@ class TimeTableGenerator:
                         self.model.add(sum(vars_for_day) <= max_limit + slack)
 
     
-    def _subject_min_per_day(self):
+    def _subject_min_per_day(self) -> None:
         # min_per_day subject
         for c_id, subjects in self.class_subject_schedule.items():
             for sub_id, vars_for_subject in subjects.items():
@@ -250,7 +300,7 @@ class TimeTableGenerator:
                         self.model.add(sum(vars_for_day) >= min_limit - slack)
 
     
-    def _subject_max_per_week(self):
+    def _subject_max_per_week(self) -> None:
         # max_per_week subject
         for c_id, subjects in self.class_subject_schedule.items():
             for sub_id, vars_for_subject in subjects.items():
@@ -275,7 +325,7 @@ class TimeTableGenerator:
                     self.model.add(sum(vars_for_week) <= max_limit + slack)
 
 
-    def _subject_min_per_week(self):
+    def _subject_min_per_week(self) -> None:
         # min_per_week subject
         for c_id, subjects in self.class_subject_schedule.items():
             for sub_id, vars_for_subject in subjects.items():
@@ -300,7 +350,7 @@ class TimeTableGenerator:
                     self.model.add(sum(vars_for_week) >= min_limit - slack)
 
         
-    def _subject_max_consecutive(self):
+    def _subject_max_consecutive(self) -> None:
         for c_id, subjects in self.class_subject_schedule.items():
             for sub_id, vars_for_subject in subjects.items():
 
@@ -324,7 +374,7 @@ class TimeTableGenerator:
 
                             self.model.add(sum(vars_for_day[i : i + max_limit + 1]) <= max_limit + slack)
 
-    def _subject_min_consecutive(self):
+    def _subject_min_consecutive(self) -> None:
         # min_consecutive subject
         for c_id, subjects in self.class_subject_schedule.items():
             for sub_id, var_for_subject in subjects.items():
@@ -381,7 +431,7 @@ class TimeTableGenerator:
 
                                     self.model.add(slack >= 1).OnlyEnforceIf(is_start)    
 
-    def _subject_morning_tendency(self):
+    def _subject_morning_tendency(self) -> None:
         # morning_tendency subject
         for c_id, subjects in self.class_subject_schedule.items():
             for sub_id, vars_for_subject in subjects.items():
@@ -413,8 +463,37 @@ class TimeTableGenerator:
                             self.silent_minimization.append(scaled_cost * var)
 
 
-    def _teacher_assignment_first_slot_days(self):
-        FIRST_SLOT_INDEX = 0
+    def _subject_slot_variety(self, weight: int = 2):
+        # slot_variety subject
+        for c_id, subjects in self.class_subject_schedule.items():
+            for sub_id, vars_for_subject in subjects.items():
+
+                for slot_index in range(self.slots):
+                    same_slot_flags = []
+                    for day in self.days:
+                        vars_for_day = vars_for_subject[day]
+                        if slot_index < len(vars_for_day):
+                            same_slot_flags.append(vars_for_day[slot_index])
+
+                    if len(same_slot_flags) < 2:
+                        continue  # At least 2 days to call it repetiv=tive
+
+                    repeat_count = self.model.new_int_var( 0, len(same_slot_flags), f"repeat_{c_id}_{sub_id}_{slot_index}" )
+
+                    self.model.add(repeat_count == sum(same_slot_flags))
+                    
+                    excess = self.model.new_int_var(0, len(same_slot_flags), f"excess_{c_id}_{sub_id}_{slot_index}")
+
+                    self.model.add(excess >= repeat_count - 1)
+
+                    self.model.add(excess >= 0)
+
+                    self.silent_minimization.append(weight * excess)
+
+    def _teacher_assignment_first_slot_days(self) -> None:
+
+        FIRST_SLOT_INDEX = 0 # Using this cause we can reuse this to add new constraints later
+
         # first_slot_days teacher_assignment
         for assigment in self.assignments:
             first_slot_days = assigment.constraints.first_slot_days
@@ -448,14 +527,22 @@ class TimeTableGenerator:
                 )
 
                 self.model.add(first_slot_var + slack >= 1)
+    
 
-    def _apply_teacher_constraints(self):
+    def _apply_class_constraints(self) -> None:
+        self._minimize_gaps(schedule_dict=self.class_schedule, label="classes", weight=3)
+
+    def _apply_teacher_constraints(self) -> None:
+
         # Applying teacher constraints
         self._teacher_max_per_day()
         self._teacher_max_per_week()
         self._teacher_max_consecutive()
+        self._teacher_balance_daily_load(weight=5)
+        self._minimize_gaps(schedule_dict=self.teacher_schedule, label="teachers", weight=5)
 
-    def _apply_subject_constraints(self):
+    def _apply_subject_constraints(self) -> None:
+
         # Applying subject constraints
         self._subject_max_per_day()
         self._subject_min_per_day()
@@ -464,7 +551,70 @@ class TimeTableGenerator:
         self._subject_max_consecutive()
         self._subject_min_consecutive()
         self._subject_morning_tendency()
+        self._subject_slot_variety(weight=2)
 
-    def _apply_teacher_assignment_constraints(self):
+    def _apply_teacher_assignment_constraints(self) -> None:
+
         # Apply assignment constraints
         self._teacher_assignment_first_slot_days()
+    
+
+    def _apply_minimization(self):
+        objective_terms = []
+
+        for slack in self.error_slacks.values():
+            objective_terms.append(slack.weight * slack.variable)
+
+        objective_terms.extend(self.silent_minimization)
+
+        all_assignment_vars = [
+            var
+            for day_vars in self.assignment_vars.values()
+            for slot_vars in day_vars.values()
+            for var in slot_vars.values()
+        ]
+
+        if all_assignment_vars:
+            objective_terms.append(
+                -self.ASSIGNMENT_WEIGHT * sum(all_assignment_vars)
+            )
+
+        if not objective_terms:
+            return
+
+        self.model.minimize(sum(objective_terms))
+
+    
+    def _fetch_error_slacks(self, solver: cp_model.CpSolver) -> List[str]:
+
+        slack_errors = []
+        for slack in self.error_slacks.values():
+
+            value = solver.value(slack.variable)
+
+            if value > 0:
+                slack_errors.append(f"{slack.error_msg} (slack={value})")
+
+        return slack_errors
+    
+    
+    def _fetch_timetable_entries(self, solver: cp_model.CpSolver) -> None: # Also for now return the list of timetable after schema/model definition
+        pass
+
+    
+    def solve(self, time_limit_sec: float = 60, seed: int = 42) -> None: # For now return nothing change return type to timetable response
+
+        self._create_and_apply_variables()
+        self._apply_generic_conditions()
+        self._apply_class_constraints()
+        self._apply_teacher_constraints()
+        self._apply_subject_constraints()
+        self._apply_teacher_assignment_constraints()
+        self._apply_minimization()
+
+        solver = cp_model.CpSolver()
+        solver.parameters.max_time_in_seconds = time_limit_sec
+        solver.parameters.num_search_workers = 8
+        solver.parameters.random_seed = seed
+        solver.parameters.symmetry_level = 2
+
