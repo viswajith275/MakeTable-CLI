@@ -2,7 +2,7 @@ from pydantic import BaseModel, UUID4
 from typing import List, Optional
 from enum import Enum
 
-class WeekDay(Enum, str):
+class WeekDay(str, Enum):
     Mon = "Mon"
     Tue = "Tue"
     Wed = "Wed"
@@ -11,7 +11,7 @@ class WeekDay(Enum, str):
     Sat = "Sat"
     Sun = "Sun"
 
-class Level(Enum, str):
+class Level(str, Enum):
     Low = "Low"
     Med = "Med"
     High = "High"
@@ -37,7 +37,6 @@ class SubjectConstraints(BaseModel):
     min_consecutive: int
 
 class TeacherAssignmentConstraint(BaseModel):
-    is_class_teacher: bool
     first_slot_days: Optional[List[WeekDay]]
 
 class ProjectInput(BaseModel):
@@ -86,3 +85,24 @@ class TimeTableGenerationInput(BaseModel):
     teachers: List[TeacherInput]
     subjects: List[SubjectInput]
     teacher_assignments: List[TeacherAssignmentInput]
+
+
+class TimeTableEntryOutput(BaseModel):
+    assignment_id: UUID4
+    class_name: str
+    room_name: str
+    subject_name: str
+    teacher_name: str
+    day: WeekDay
+    slot: int
+
+
+class ViolationOut(BaseModel):
+    error_msg: str
+    val: int
+
+
+class GeneratedResponse(BaseModel):
+    entries: List[TimeTableEntryOutput]
+    violations: List[ViolationOut]
+    success: bool
