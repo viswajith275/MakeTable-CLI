@@ -1,63 +1,228 @@
 {
   "project": {
-    "id": "11111111-1111-4111-a111-111111111111",
-    "slots": 1,
-    "days": ["Mon"]
+    "id": "11111111-1111-4111-8111-111111111111",
+    "slots": 8,
+    "days": ["Mon", "Tue", "Wed", "Thu", "Fri"]
   },
   "rooms": [
     {
-      "id": "22222222-2222-4222-a222-222222222222",
-      "name": "Room 101",
+      "id": "22222222-2222-4222-8222-222222222201",
+      "name": "Room A",
       "is_lab": false,
-      "constraints": {
-        "capacity": 1
-      }
+      "constraints": { "capacity": 1 }
+    },
+    {
+      "id": "22222222-2222-4222-8222-222222222202",
+      "name": "Room B",
+      "is_lab": false,
+      "constraints": { "capacity": 1 }
+    },
+    {
+      "id": "22222222-2222-4222-8222-222222222203",
+      "name": "Room C",
+      "is_lab": false,
+      "constraints": { "capacity": 1 }
+    },
+    {
+      "id": "22222222-2222-4222-8222-222222222204",
+      "name": "Science Lab",
+      "is_lab": true,
+      "constraints": { "capacity": 1 }
+    },
+    {
+      "id": "22222222-2222-4222-8222-222222222205",
+      "name": "Computer Lab",
+      "is_lab": true,
+      "constraints": { "capacity": 2 }
     }
   ],
   "classes": [
     {
-      "id": "33333333-3333-4333-a333-333333333333",
-      "name": "Grade 10",
-      "room_id": "22222222-2222-4222-a222-222222222222",
+      "id": "33333333-3333-4333-8333-333333333301",
+      "name": "Class 10A",
+      "room_id": "22222222-2222-4222-8222-222222222201",
+      "constraints": {}
+    },
+    {
+      "id": "33333333-3333-4333-8333-333333333302",
+      "name": "Class 10B",
+      "room_id": "22222222-2222-4222-8222-222222222202",
+      "constraints": {}
+    },
+    {
+      "id": "33333333-3333-4333-8333-333333333303",
+      "name": "Class 10C",
+      "room_id": "22222222-2222-4222-8222-222222222203",
       "constraints": {}
     }
   ],
   "teachers": [
     {
-      "id": "44444444-4444-4444-a444-444444444444",
-      "name": "Alan Turing",
-      "constraints": {
-        "max_per_day": 1,
-        "max_per_week": 1,
-        "max_consecutive": 1
-      }
+      "id": "55555555-5555-4555-8555-555555555501",
+      "name": "Ananya Sharma",
+      "constraints": { "max_per_day": 6, "max_per_week": 25, "max_consecutive": 3 }
+    },
+    {
+      "id": "55555555-5555-4555-8555-555555555502",
+      "name": "Rajesh Kumar",
+      "constraints": { "max_per_day": 5, "max_per_week": 20, "max_consecutive": 2 }
+    },
+    {
+      "id": "55555555-5555-4555-8555-555555555503",
+      "name": "Priya Nair",
+      "constraints": { "max_per_day": 5, "max_per_week": 15, "max_consecutive": 2 }
+    },
+    {
+      "id": "55555555-5555-4555-8555-555555555504",
+      "name": "Suresh Menon",
+      "constraints": { "max_per_day": 6, "max_per_week": 20, "max_consecutive": 2 }
+    },
+    {
+      "id": "55555555-5555-4555-8555-555555555505",
+      "name": "Kavita Rao",
+      "constraints": { "max_per_day": 6, "max_per_week": 22, "max_consecutive": 3 }
+    },
+    {
+      "id": "55555555-5555-4555-8555-555555555506",
+      "name": "Arjun Pillai",
+      "constraints": { "max_per_day": 5, "max_per_week": 20, "max_consecutive": 2 }
+    },
+    {
+      "id": "55555555-5555-4555-8555-555555555507",
+      "name": "Divya Krishnan",
+      "constraints": { "max_per_day": 5, "max_per_week": 18, "max_consecutive": 2 }
+    },
+    {
+      "id": "55555555-5555-4555-8555-555555555508",
+      "name": "Manoj Varma",
+      "constraints": { "max_per_day": 4, "max_per_week": 10, "max_consecutive": 2 }
+    },
+    {
+      "id": "55555555-5555-4555-8555-555555555509",
+      "name": "Lakshmi Menon",
+      "constraints": { "max_per_day": 6, "max_per_week": 20, "max_consecutive": 1 }
     }
   ],
   "subjects": [
     {
-      "id": "55555555-5555-4555-a555-555555555555",
+      "id": "44444444-4444-4444-8444-444444444401",
+      "name": "Mathematics",
+      "constraints": {
+        "morning_tendency": "High",
+        "max_per_day": 2,
+        "min_per_day": 0,
+        "max_per_week": 7,
+        "min_per_week": 7,
+        "max_consecutive": 2,
+        "min_consecutive": 1
+      }
+    },
+    {
+      "id": "44444444-4444-4444-8444-444444444402",
+      "name": "Physics",
+      "constraints": {
+        "morning_tendency": "Med",
+        "max_per_day": 2,
+        "min_per_day": 0,
+        "max_per_week": 5,
+        "min_per_week": 5,
+        "max_consecutive": 2,
+        "min_consecutive": 1
+      }
+    },
+    {
+      "id": "44444444-4444-4444-8444-444444444403",
+      "name": "Chemistry",
+      "constraints": {
+        "morning_tendency": "Med",
+        "max_per_day": 2,
+        "min_per_day": 0,
+        "max_per_week": 5,
+        "min_per_week": 5,
+        "max_consecutive": 2,
+        "min_consecutive": 1
+      }
+    },
+    {
+      "id": "44444444-4444-4444-8444-444444444404",
+      "name": "English",
+      "constraints": {
+        "morning_tendency": "High",
+        "max_per_day": 2,
+        "min_per_day": 0,
+        "max_per_week": 6,
+        "min_per_week": 6,
+        "max_consecutive": 2,
+        "min_consecutive": 1
+      }
+    },
+    {
+      "id": "44444444-4444-4444-8444-444444444405",
+      "name": "Biology",
+      "constraints": {
+        "morning_tendency": "Med",
+        "max_per_day": 2,
+        "min_per_day": 0,
+        "max_per_week": 5,
+        "min_per_week": 5,
+        "max_consecutive": 2,
+        "min_consecutive": 1
+      }
+    },
+    {
+      "id": "44444444-4444-4444-8444-444444444406",
       "name": "Computer Science",
+      "constraints": {
+        "morning_tendency": "Low",
+        "max_per_day": 2,
+        "min_per_day": 0,
+        "max_per_week": 6,
+        "min_per_week": 6,
+        "max_consecutive": 2,
+        "min_consecutive": 1
+      }
+    },
+    {
+      "id": "44444444-4444-4444-8444-444444444407",
+      "name": "Physical Education",
       "constraints": {
         "morning_tendency": "Low",
         "max_per_day": 1,
         "min_per_day": 0,
-        "max_per_week": 1,
-        "min_per_week": 0,
+        "max_per_week": 6,
+        "min_per_week": 6,
         "max_consecutive": 1,
         "min_consecutive": 1
       }
     }
   ],
   "teacher_assignments": [
-    {
-      "id": "66666666-6666-4666-a666-666666666666",
-      "class_id": "33333333-3333-4333-a333-333333333333",
-      "teacher_id": "44444444-4444-4444-a444-444444444444",
-      "subject_id": "55555555-5555-4555-a555-555555555555",
-      "target_room_id": null,
-      "constraints": {
-        "first_slot_days": ["Mon"]
-      }
-    }
+    { "id": "66666666-6666-4666-8666-666666666601", "class_id": "33333333-3333-4333-8333-333333333301", "teacher_id": "55555555-5555-4555-8555-555555555501", "subject_id": "44444444-4444-4444-8444-444444444401", "target_room_id": null, "constraints": { "first_slot_days": ["Mon", "Wed"] } },
+    { "id": "66666666-6666-4666-8666-666666666602", "class_id": "33333333-3333-4333-8333-333333333302", "teacher_id": "55555555-5555-4555-8555-555555555501", "subject_id": "44444444-4444-4444-8444-444444444401", "target_room_id": null, "constraints": { "first_slot_days": null } },
+    { "id": "66666666-6666-4666-8666-666666666603", "class_id": "33333333-3333-4333-8333-333333333303", "teacher_id": "55555555-5555-4555-8555-555555555501", "subject_id": "44444444-4444-4444-8444-444444444401", "target_room_id": null, "constraints": { "first_slot_days": null } },
+
+    { "id": "66666666-6666-4666-8666-666666666604", "class_id": "33333333-3333-4333-8333-333333333301", "teacher_id": "55555555-5555-4555-8555-555555555502", "subject_id": "44444444-4444-4444-8444-444444444402", "target_room_id": "22222222-2222-4222-8222-222222222204", "constraints": { "first_slot_days": null } },
+    { "id": "66666666-6666-4666-8666-666666666605", "class_id": "33333333-3333-4333-8333-333333333302", "teacher_id": "55555555-5555-4555-8555-555555555502", "subject_id": "44444444-4444-4444-8444-444444444402", "target_room_id": "22222222-2222-4222-8222-222222222204", "constraints": { "first_slot_days": null } },
+    { "id": "66666666-6666-4666-8666-666666666606", "class_id": "33333333-3333-4333-8333-333333333303", "teacher_id": "55555555-5555-4555-8555-555555555503", "subject_id": "44444444-4444-4444-8444-444444444402", "target_room_id": "22222222-2222-4222-8222-222222222204", "constraints": { "first_slot_days": ["Tue", "Thu"] } },
+
+    { "id": "66666666-6666-4666-8666-666666666607", "class_id": "33333333-3333-4333-8333-333333333301", "teacher_id": "55555555-5555-4555-8555-555555555504", "subject_id": "44444444-4444-4444-8444-444444444403", "target_room_id": "22222222-2222-4222-8222-222222222204", "constraints": { "first_slot_days": null } },
+    { "id": "66666666-6666-4666-8666-666666666608", "class_id": "33333333-3333-4333-8333-333333333302", "teacher_id": "55555555-5555-4555-8555-555555555504", "subject_id": "44444444-4444-4444-8444-444444444403", "target_room_id": "22222222-2222-4222-8222-222222222204", "constraints": { "first_slot_days": null } },
+    { "id": "66666666-6666-4666-8666-666666666609", "class_id": "33333333-3333-4333-8333-333333333303", "teacher_id": "55555555-5555-4555-8555-555555555504", "subject_id": "44444444-4444-4444-8444-444444444403", "target_room_id": "22222222-2222-4222-8222-222222222204", "constraints": { "first_slot_days": null } },
+
+    { "id": "66666666-6666-4666-8666-666666666610", "class_id": "33333333-3333-4333-8333-333333333301", "teacher_id": "55555555-5555-4555-8555-555555555505", "subject_id": "44444444-4444-4444-8444-444444444404", "target_room_id": null, "constraints": { "first_slot_days": ["Mon", "Fri"] } },
+    { "id": "66666666-6666-4666-8666-666666666611", "class_id": "33333333-3333-4333-8333-333333333302", "teacher_id": "55555555-5555-4555-8555-555555555505", "subject_id": "44444444-4444-4444-8444-444444444404", "target_room_id": null, "constraints": { "first_slot_days": null } },
+    { "id": "66666666-6666-4666-8666-666666666612", "class_id": "33333333-3333-4333-8333-333333333303", "teacher_id": "55555555-5555-4555-8555-555555555505", "subject_id": "44444444-4444-4444-8444-444444444404", "target_room_id": null, "constraints": { "first_slot_days": null } },
+
+    { "id": "66666666-6666-4666-8666-666666666613", "class_id": "33333333-3333-4333-8333-333333333301", "teacher_id": "55555555-5555-4555-8555-555555555506", "subject_id": "44444444-4444-4444-8444-444444444405", "target_room_id": "22222222-2222-4222-8222-222222222204", "constraints": { "first_slot_days": null } },
+    { "id": "66666666-6666-4666-8666-666666666614", "class_id": "33333333-3333-4333-8333-333333333302", "teacher_id": "55555555-5555-4555-8555-555555555506", "subject_id": "44444444-4444-4444-8444-444444444405", "target_room_id": "22222222-2222-4222-8222-222222222204", "constraints": { "first_slot_days": null } },
+    { "id": "66666666-6666-4666-8666-666666666615", "class_id": "33333333-3333-4333-8333-333333333303", "teacher_id": "55555555-5555-4555-8555-555555555506", "subject_id": "44444444-4444-4444-8444-444444444405", "target_room_id": "22222222-2222-4222-8222-222222222204", "constraints": { "first_slot_days": null } },
+
+    { "id": "66666666-6666-4666-8666-666666666616", "class_id": "33333333-3333-4333-8333-333333333301", "teacher_id": "55555555-5555-4555-8555-555555555507", "subject_id": "44444444-4444-4444-8444-444444444406", "target_room_id": "22222222-2222-4222-8222-222222222205", "constraints": { "first_slot_days": null } },
+    { "id": "66666666-6666-4666-8666-666666666617", "class_id": "33333333-3333-4333-8333-333333333302", "teacher_id": "55555555-5555-4555-8555-555555555507", "subject_id": "44444444-4444-4444-8444-444444444406", "target_room_id": "22222222-2222-4222-8222-222222222205", "constraints": { "first_slot_days": null } },
+    { "id": "66666666-6666-4666-8666-666666666618", "class_id": "33333333-3333-4333-8333-333333333303", "teacher_id": "55555555-5555-4555-8555-555555555508", "subject_id": "44444444-4444-4444-8444-444444444406", "target_room_id": "22222222-2222-4222-8222-222222222205", "constraints": { "first_slot_days": ["Wed"] } },
+
+    { "id": "66666666-6666-4666-8666-666666666619", "class_id": "33333333-3333-4333-8333-333333333301", "teacher_id": "55555555-5555-4555-8555-555555555509", "subject_id": "44444444-4444-4444-8444-444444444407", "target_room_id": null, "constraints": { "first_slot_days": null } },
+    { "id": "66666666-6666-4666-8666-666666666620", "class_id": "33333333-3333-4333-8333-333333333302", "teacher_id": "55555555-5555-4555-8555-555555555509", "subject_id": "44444444-4444-4444-8444-444444444407", "target_room_id": null, "constraints": { "first_slot_days": null } },
+    { "id": "66666666-6666-4666-8666-666666666621", "class_id": "33333333-3333-4333-8333-333333333303", "teacher_id": "55555555-5555-4555-8555-555555555509", "subject_id": "44444444-4444-4444-8444-444444444407", "target_room_id": null, "constraints": { "first_slot_days": null } }
   ]
 }

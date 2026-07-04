@@ -1,4 +1,3 @@
-# cli.py
 from __future__ import annotations
 
 import json
@@ -9,8 +8,9 @@ import typer
 from rich.console import Console
 from rich.table import Table
 from pydantic import ValidationError
+from collections import defaultdict
 
-from models import TimeTableGenerationInput, GeneratedResponse
+from models import TimeTableGenerationInput, GeneratedResponse, TimeTableEntryOutput
 from solver import TimeTableGenerator
 
 app = typer.Typer(
@@ -24,11 +24,9 @@ console = Console()
 class OutputFormat(str, Enum):
     json = "json"
     table = "table"
-    csv = "csv"
 
 
 def _load_input(input_file: Path) -> TimeTableGenerationInput:
-    """Load and validate the raw input file against the Pydantic schema."""
     if not input_file.exists():
         console.print(f"[red]Input file not found:[/red] {input_file}")
         raise typer.Exit(code=1)
@@ -50,24 +48,53 @@ def _load_input(input_file: Path) -> TimeTableGenerationInput:
         raise typer.Exit(code=1)
 
 
+# Only used for testing and raw cli usage
 def _print_entries_table(response: GeneratedResponse):
 
-    table = Table(title="Generated Timetable")
-    for col in ["Day", "Slot", "Class", "Subject", "Teacher", "Room"]:
-        table.add_column(col)
+    if not response.entries:
+        console.print("[yellow]No entries to display.[/yellow]")
+        return
 
-    for e in sorted(response.entries, key=lambda x: (x.day.value, x.slot)):
-        table.add_row(
-            e.day.value,
-            str(e.slot),
-            e.class_name,
-            e.subject_name,
-            e.teacher_name,
-            e.room_name,
-        )
-    console.print(table)
+    by_class: dict[str, list[TimeTableEntryOutput]] = defaultdict(list)
+    for entry in response.entries:
+        by_class[entry.class_name].append(entry)
 
+    day_order = {'Mon': 0, 'Tue': 1, 'Wed': 2, 'Thu': 3, 'Fri': 4, 'Sat': 5, 'Sun': 6}
 
+    all_days = sorted({e.day for e in response.entries}, key=lambda d: day_order[d.value])
+    all_slots = sorted({e.slot for e in response.entries})
+
+    for class_name in sorted(by_class.keys()):
+        entries = by_class[class_name]
+
+        cell_lookup: dict = {day: {} for day in all_days}
+        for entry in entries:
+            cell_lookup[entry.day][entry.slot] = entry
+
+        table = Table(title=f"Timetable — {class_name}", show_lines=True)
+        table.add_column("Day", style="bold cyan", justify="center")
+        for slot in all_slots:
+            table.add_column(f"Slot {slot}", justify="center")
+
+        for day in all_days:
+            row = [day.value]
+            for slot in all_slots:
+                entry = cell_lookup[day].get(slot)
+                if entry is None:
+                    row.append("[dim]—[/dim]")
+                else:
+                    cell_text = (
+                        f"[bold]{entry.subject_name}[/bold]\n"
+                        f"{entry.teacher_name}\n"
+                        f"[dim]{entry.room_name}[/dim]"
+                    )
+                    row.append(cell_text)
+            table.add_row(*row)
+
+        console.print(table)
+        console.print()
+
+# Also this
 def _print_violations(response: GeneratedResponse):
 
     if not response.violations:
@@ -83,22 +110,12 @@ def _print_violations(response: GeneratedResponse):
 
     console.print(table)
 
-
+# Writes the res json to a result file
 def _write_output(response: GeneratedResponse, output_file: Path | None, fmt: OutputFormat):
     if fmt == OutputFormat.json:
         text = response.model_dump_json(indent=2)
 
-    elif fmt == OutputFormat.csv:
-        import csv
-        import io
-        buf = io.StringIO()
-        writer = csv.writer(buf)
-        writer.writerow(["assignment_id", "day", "slot", "class_name", "subject_name", "teacher_name", "room_name"])
-        for e in response.entries:
-            writer.writerow([str(e.assignment_id), e.day.value, e.slot, e.class_name, e.subject_name, e.teacher_name, e.room_name])
-        text = buf.getvalue()
-
-    else:  # table -> print directly, nothing to write
+    else:
         _print_entries_table(response)
         _print_violations(response)
         return
@@ -115,7 +132,6 @@ def _write_output(response: GeneratedResponse, output_file: Path | None, fmt: Ou
 def validate(
     input_file: Path = typer.Argument(..., help="Path to the input JSON file matching TimeTableGenerationInput"),
 ):
-    """Validate an input file against the Pydantic schema without generating anything."""
     _load_input(input_file)
     console.print("[green]Input is valid.[/green]")
 
@@ -129,7 +145,6 @@ def generate(
     seed: int = typer.Option(42, "--seed", "-s", help="Random seed for reproducibility"),
     show_violations: bool = typer.Option(True, "--violations/--no-violations", help="Print violation report after generation"),
 ):
-    """Generate a timetable from the given input file."""
     data = _load_input(input_file)
 
     with console.status("[bold green]Solving..."):
@@ -150,15 +165,13 @@ def generate(
     _write_output(response, output_file, fmt)
 
     if show_violations and fmt != OutputFormat.table:
-        # table format already prints violations inline above
         _print_violations(response)
 
-
+# For knowing the input schema json
 @app.command()
 def schema(
     output_file: Path = typer.Option(None, "--output", "-o", help="Write the JSON schema to this file instead of stdout"),
 ):
-    """Print the JSON schema for the expected input file, for reference."""
     schema_dict = TimeTableGenerationInput.model_json_schema()
     text = json.dumps(schema_dict, indent=2)
     if output_file:

@@ -153,7 +153,7 @@ class TimeTableGenerator:
                     
                 for r_id, schedule_grid in self.room_schedule.items():
 
-                    self.variables_at_this_time = schedule_grid[day][slot]
+                    variables_at_this_time = schedule_grid[day][slot]
                     
                     room_capacity = self.rooms_dict[r_id].constraints.capacity 
                     
@@ -251,7 +251,9 @@ class TimeTableGenerator:
         for teacher_id, vars_for_teacher in self.teacher_schedule.items():
             daily_counts = []
             for day in self.days:
-                vars_for_day = vars_for_teacher[day]
+                vars_for_day = []
+                for slot in range(self.slots):
+                    vars_for_day.extend(vars_for_teacher[day][slot])
                 if not vars_for_day:
                     continue
                 count = self.model.new_int_var(0, len(vars_for_day), f"load_{teacher_id}_{day}")
