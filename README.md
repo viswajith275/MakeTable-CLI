@@ -112,7 +112,7 @@ Timetable — 10-A
 ┃ Day   ┃ Slot 0    ┃ Slot 1    ┃ Slot 2    ┃ Slot 3    ┃ Slot 4    ┃
 ┡━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━┩
 │ Mon   │ Maths     │ Science   │ English   │ History   │ PE        │
-│       │ Mr. Smith │ Dr. Johnson│ Ms. Brown │ Mr. Davis │ Coach Lee │
+│       │ Mr. Smith │Dr. Johnson│ Ms. Brown │ Mr. Davis │ Coach Lee │
 │       │ Room 101  │ Room 102  │ Room 103  │ Room 104  │ Gym       │
 ```
 

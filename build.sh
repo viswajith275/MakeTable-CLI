@@ -7,7 +7,6 @@ uv sync
 
 # For linux
 uv run python -m nuitka \
-    --standalone \
     --onefile \
     --enable-plugin=pydantic \
     --enable-plugin=anti-bloat \
@@ -18,13 +17,12 @@ uv run python -m nuitka \
     --lto=yes \
     --strip \
     --onefile-tempdir-spec="%CACHE_DIR%/timetable_app" \
-    main.py
+    src/main.py
 
 
 # For windows
 
 #         uv run python -m nuitka `
-#            --standalone `
 #            --onefile `
 #            --enable-plugin=pydantic `
 #            --enable-plugin=anti-bloat `
@@ -38,14 +36,13 @@ uv run python -m nuitka \
 #            --noinclude-pytest-mode=nofollow `
 #            --noinclude-setuptools-mode=nofollow `
 #            --onefile-tempdir-spec="%CACHE_DIR%\timetable_app" `
-#            main.py
+#            src/main.py
 
 
 
 # For macos
 
 #        uv run python -m nuitka \
-#            --standalone \
 #            --onefile \
 #            --follow-imports \
 #            --include-package=ortools \
@@ -60,4 +57,4 @@ uv run python -m nuitka \
 #            --output-filename=timetable \
 #            --lto=yes \
 #            --clang \
-#            main.py  
+#            src/main.py  
