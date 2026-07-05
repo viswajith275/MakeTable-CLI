@@ -10,8 +10,7 @@ from rich.table import Table
 from pydantic import ValidationError
 from collections import defaultdict
 
-from models import TimeTableGenerationInput, GeneratedResponse, TimeTableEntryOutput
-from solver import TimeTableGenerator
+from src.models import TimeTableGenerationInput, GeneratedResponse, TimeTableEntryOutput
 
 app = typer.Typer(
     name="timetable",
@@ -148,6 +147,7 @@ def generate(
     data = _load_input(input_file)
 
     with console.status("[bold green]Solving..."):
+        from src.solver import TimeTableGenerator
         generator = TimeTableGenerator(data)
         response: GeneratedResponse = generator.solve(
             time_limit_sec=time_limit,

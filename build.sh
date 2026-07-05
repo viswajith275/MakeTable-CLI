@@ -21,24 +21,43 @@ uv run python -m nuitka \
     main.py
 
 
-# For macos
-"""
-uv run python -m nuitka \
-    --standalone \
-    --onefile \
-    --follow-imports \
-    --include-package=ortools \
-    --include-package-data=ortools \
-    --include-module=google.protobuf \
-    --include-package=pydantic \
-    --include-package=pydantic_core \
-    --include-package=typer \
-    --include-package=rich \
-    --assume-yes-for-downloads \
-    --output-dir=dist/macos \
-    --output-filename=timetable \
-    --lto=yes \
-    --clang \
-    main.py  
+# For windows
 
-"""
+#         uv run python -m nuitka `
+#            --standalone `
+#            --onefile `
+#            --enable-plugin=pydantic `
+#            --enable-plugin=anti-bloat `
+#            --include-package-data=ortools `
+#            --assume-yes-for-downloads `
+#            --output-dir=dist\windows `
+#            --output-filename=timetable.exe `
+#            --lto=yes `
+#            --strip `
+#            --remove-output `
+#            --noinclude-pytest-mode=nofollow `
+#            --noinclude-setuptools-mode=nofollow `
+#            --onefile-tempdir-spec="%CACHE_DIR%\timetable_app" `
+#            main.py
+
+
+
+# For macos
+
+#        uv run python -m nuitka \
+#            --standalone \
+#            --onefile \
+#            --follow-imports \
+#            --include-package=ortools \
+#            --include-package-data=ortools \
+#            --include-module=google.protobuf \
+#            --include-package=pydantic \
+#            --include-package=pydantic_core \
+#            --include-package=typer \
+#            --include-package=rich \
+#            --assume-yes-for-downloads \
+#            --output-dir=dist/macos \
+#            --output-filename=timetable \
+#            --lto=yes \
+#            --clang \
+#            main.py  

@@ -41,6 +41,7 @@ class TeacherAssignmentConstraint(BaseModel):
 
 class ProjectInput(BaseModel):
     id: UUID4
+    name: str
     slots: int
     days: List[WeekDay]
 

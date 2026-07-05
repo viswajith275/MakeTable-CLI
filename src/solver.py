@@ -1,6 +1,6 @@
 from ortools.sat.python import cp_model
 from dataclasses import dataclass
-from models import TimeTableGenerationInput, WeekDay, TimeTableEntryOutput, ViolationOut, GeneratedResponse
+from src.models import TimeTableGenerationInput, WeekDay, TimeTableEntryOutput, ViolationOut, GeneratedResponse
 import collections
 from typing import List, Dict
 

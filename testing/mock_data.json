@@ -1,0 +1,455 @@
+{
+  "project": {
+    "id": "2867ecca-4ef7-41a6-aa5b-7bfa8ec0d39b",
+    "slots": 7,
+    "name": "timetable",
+    "days": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri"
+    ]
+  },
+  "rooms": [
+    {
+      "id": "c2be2ba5-1f8e-4dd2-b214-a22f6ed8ba8c",
+      "name": "Room 101",
+      "is_lab": false,
+      "constraints": {
+        "capacity": 2
+      }
+    },
+    {
+      "id": "99026eb8-6af0-424f-a164-ae5bbca91c05",
+      "name": "Room 102",
+      "is_lab": false,
+      "constraints": {
+        "capacity": 1
+      }
+    },
+    {
+      "id": "6794a6e5-b489-4af5-b9f9-5c943b685d3d",
+      "name": "Room 103",
+      "is_lab": false,
+      "constraints": {
+        "capacity": 2
+      }
+    },
+    {
+      "id": "774d378b-7834-432d-ab16-f14113c73888",
+      "name": "Science Lab A",
+      "is_lab": true,
+      "constraints": {
+        "capacity": 2
+      }
+    },
+    {
+      "id": "890fe37d-2897-4210-9841-f1cd9a2236f5",
+      "name": "Computer Lab A",
+      "is_lab": true,
+      "constraints": {
+        "capacity": 1
+      }
+    }
+  ],
+  "classes": [
+    {
+      "id": "be2f30c4-0d61-46cc-b70b-06d729169232",
+      "name": "Grade 6 - A",
+      "room_id": "c2be2ba5-1f8e-4dd2-b214-a22f6ed8ba8c",
+      "constraints": {}
+    },
+    {
+      "id": "e72241af-f5a9-4696-b992-0ac5ca714bf0",
+      "name": "Grade 6 - B",
+      "room_id": "99026eb8-6af0-424f-a164-ae5bbca91c05",
+      "constraints": {}
+    },
+    {
+      "id": "33ac0746-0f85-4c11-a37c-f39400c02d35",
+      "name": "Grade 6 - C",
+      "room_id": "6794a6e5-b489-4af5-b9f9-5c943b685d3d",
+      "constraints": {}
+    }
+  ],
+  "teachers": [
+    {
+      "id": "8dc2825c-d6c6-41f5-bf3b-f752517b683b",
+      "name": "Anjali Rao",
+      "constraints": {
+        "max_per_day": 5,
+        "max_per_week": 19,
+        "max_consecutive": 3
+      }
+    },
+    {
+      "id": "c7346ebc-f6cd-42b0-84e4-5c47f8679ff3",
+      "name": "Divya Reddy",
+      "constraints": {
+        "max_per_day": 3,
+        "max_per_week": 7,
+        "max_consecutive": 3
+      }
+    },
+    {
+      "id": "28f87521-c54f-49ec-8221-113e8f546319",
+      "name": "Vinod Menon",
+      "constraints": {
+        "max_per_day": 6,
+        "max_per_week": 16,
+        "max_consecutive": 2
+      }
+    },
+    {
+      "id": "41158a3a-3f40-468f-873d-0c536201dabf",
+      "name": "Ajay Thomas",
+      "constraints": {
+        "max_per_day": 4,
+        "max_per_week": 20,
+        "max_consecutive": 2
+      }
+    },
+    {
+      "id": "752061c4-de9b-4799-9dda-a52963db934d",
+      "name": "John Varma",
+      "constraints": {
+        "max_per_day": 5,
+        "max_per_week": 9,
+        "max_consecutive": 1
+      }
+    },
+    {
+      "id": "41a8fc52-1dd3-4b3c-9774-11094b5e891f",
+      "name": "Asha Reddy",
+      "constraints": {
+        "max_per_day": 6,
+        "max_per_week": 13,
+        "max_consecutive": 1
+      }
+    },
+    {
+      "id": "17c192a6-1f91-4b82-820c-bf28a05ef5fe",
+      "name": "Ravi Rao",
+      "constraints": {
+        "max_per_day": 4,
+        "max_per_week": 19,
+        "max_consecutive": 3
+      }
+    },
+    {
+      "id": "fe3c27ea-10ca-427b-b46f-dbd5129cd088",
+      "name": "Kiran Das",
+      "constraints": {
+        "max_per_day": 3,
+        "max_per_week": 11,
+        "max_consecutive": 2
+      }
+    },
+    {
+      "id": "59fdf3f5-20ea-45ac-b8ef-c41c4c680e03",
+      "name": "Anjali George",
+      "constraints": {
+        "max_per_day": 6,
+        "max_per_week": 17,
+        "max_consecutive": 3
+      }
+    },
+    {
+      "id": "85c5eb2b-f425-46af-bd4a-9272a4736648",
+      "name": "Sanjay Iyer",
+      "constraints": {
+        "max_per_day": 6,
+        "max_per_week": 10,
+        "max_consecutive": 1
+      }
+    },
+    {
+      "id": "ebea1753-5c21-4dc9-ac90-c9018d121fe1",
+      "name": "Divya Thomas",
+      "constraints": {
+        "max_per_day": 5,
+        "max_per_week": 25,
+        "max_consecutive": 3
+      }
+    },
+    {
+      "id": "a09dfbb1-cffe-45b3-bad7-55e3a8761172",
+      "name": "Anita Iyer",
+      "constraints": {
+        "max_per_day": 3,
+        "max_per_week": 13,
+        "max_consecutive": 3
+      }
+    }
+  ],
+  "subjects": [
+    {
+      "id": "29ca6442-bdd4-415a-8d77-6dd6c9f21761",
+      "name": "Economics",
+      "constraints": {
+        "morning_tendency": "Low",
+        "max_per_day": 3,
+        "min_per_day": 2,
+        "max_per_week": 12,
+        "min_per_week": 11,
+        "max_consecutive": 3,
+        "min_consecutive": 3
+      }
+    },
+    {
+      "id": "fbee4dcc-629f-48a5-a650-00f8c2f1d26a",
+      "name": "Art",
+      "constraints": {
+        "morning_tendency": "Low",
+        "max_per_day": 1,
+        "min_per_day": 1,
+        "max_per_week": 5,
+        "min_per_week": 5,
+        "max_consecutive": 1,
+        "min_consecutive": 1
+      }
+    },
+    {
+      "id": "8286d792-ca98-4064-8e84-be04a00015c9",
+      "name": "Hindi",
+      "constraints": {
+        "morning_tendency": "Low",
+        "max_per_day": 2,
+        "min_per_day": 0,
+        "max_per_week": 8,
+        "min_per_week": 7,
+        "max_consecutive": 2,
+        "min_consecutive": 2
+      }
+    },
+    {
+      "id": "a416720d-6d5e-4291-a96b-0d6ac80a4435",
+      "name": "Mathematics",
+      "constraints": {
+        "morning_tendency": "High",
+        "max_per_day": 2,
+        "min_per_day": 0,
+        "max_per_week": 8,
+        "min_per_week": 8,
+        "max_consecutive": 1,
+        "min_consecutive": 1
+      }
+    },
+    {
+      "id": "5dadd11e-bc47-49d4-875c-0151073157b9",
+      "name": "Physical Education",
+      "constraints": {
+        "morning_tendency": "Low",
+        "max_per_day": 3,
+        "min_per_day": 2,
+        "max_per_week": 12,
+        "min_per_week": 11,
+        "max_consecutive": 1,
+        "min_consecutive": 1
+      }
+    },
+    {
+      "id": "91cfb955-b14c-415c-bbf0-613ff2c77a2d",
+      "name": "Chemistry",
+      "constraints": {
+        "morning_tendency": "Med",
+        "max_per_day": 1,
+        "min_per_day": 0,
+        "max_per_week": 3,
+        "min_per_week": 3,
+        "max_consecutive": 1,
+        "min_consecutive": 1
+      }
+    },
+    {
+      "id": "fa033273-c982-48e5-9ba0-47d241266f54",
+      "name": "Geography",
+      "constraints": {
+        "morning_tendency": "Low",
+        "max_per_day": 1,
+        "min_per_day": 1,
+        "max_per_week": 5,
+        "min_per_week": 5,
+        "max_consecutive": 1,
+        "min_consecutive": 1
+      }
+    },
+    {
+      "id": "a7e63f1b-f6b1-4c33-8934-fbd400ab1264",
+      "name": "Biology",
+      "constraints": {
+        "morning_tendency": "Med",
+        "max_per_day": 3,
+        "min_per_day": 1,
+        "max_per_week": 11,
+        "min_per_week": 10,
+        "max_consecutive": 3,
+        "min_consecutive": 2
+      }
+    },
+    {
+      "id": "67d0b4f2-196d-4c27-8aca-7304264b582a",
+      "name": "Computer Science",
+      "constraints": {
+        "morning_tendency": "Low",
+        "max_per_day": 3,
+        "min_per_day": 2,
+        "max_per_week": 12,
+        "min_per_week": 12,
+        "max_consecutive": 1,
+        "min_consecutive": 1
+      }
+    },
+    {
+      "id": "f21af8c8-6c88-4964-9a36-ffdaa7b85f5d",
+      "name": "English",
+      "constraints": {
+        "morning_tendency": "Low",
+        "max_per_day": 2,
+        "min_per_day": 0,
+        "max_per_week": 7,
+        "min_per_week": 7,
+        "max_consecutive": 2,
+        "min_consecutive": 1
+      }
+    }
+  ],
+  "teacher_assignments": [
+    {
+      "id": "1303cd0f-35c8-414a-bac7-c2a475e1605a",
+      "class_id": "be2f30c4-0d61-46cc-b70b-06d729169232",
+      "teacher_id": "ebea1753-5c21-4dc9-ac90-c9018d121fe1",
+      "subject_id": "5dadd11e-bc47-49d4-875c-0151073157b9",
+      "target_room_id": null,
+      "constraints": {
+        "first_slot_days": null
+      }
+    },
+    {
+      "id": "8ba4e791-9770-4b14-91fe-ad2fa369f159",
+      "class_id": "be2f30c4-0d61-46cc-b70b-06d729169232",
+      "teacher_id": "a09dfbb1-cffe-45b3-bad7-55e3a8761172",
+      "subject_id": "91cfb955-b14c-415c-bbf0-613ff2c77a2d",
+      "target_room_id": "774d378b-7834-432d-ab16-f14113c73888",
+      "constraints": {
+        "first_slot_days": null
+      }
+    },
+    {
+      "id": "d6a10f02-4501-4c97-97c0-3e59bf1512c2",
+      "class_id": "be2f30c4-0d61-46cc-b70b-06d729169232",
+      "teacher_id": "a09dfbb1-cffe-45b3-bad7-55e3a8761172",
+      "subject_id": "a7e63f1b-f6b1-4c33-8934-fbd400ab1264",
+      "target_room_id": "774d378b-7834-432d-ab16-f14113c73888",
+      "constraints": {
+        "first_slot_days": null
+      }
+    },
+    {
+      "id": "21916d7a-4c9a-4750-a70a-636197c1f269",
+      "class_id": "be2f30c4-0d61-46cc-b70b-06d729169232",
+      "teacher_id": "28f87521-c54f-49ec-8221-113e8f546319",
+      "subject_id": "67d0b4f2-196d-4c27-8aca-7304264b582a",
+      "target_room_id": "890fe37d-2897-4210-9841-f1cd9a2236f5",
+      "constraints": {
+        "first_slot_days": null
+      }
+    },
+    {
+      "id": "2da499f6-81ae-429f-b487-aa465c5e6fe7",
+      "class_id": "e72241af-f5a9-4696-b992-0ac5ca714bf0",
+      "teacher_id": "ebea1753-5c21-4dc9-ac90-c9018d121fe1",
+      "subject_id": "5dadd11e-bc47-49d4-875c-0151073157b9",
+      "target_room_id": null,
+      "constraints": {
+        "first_slot_days": null
+      }
+    },
+    {
+      "id": "3b527634-1653-49ea-833d-aa8b65cd2571",
+      "class_id": "e72241af-f5a9-4696-b992-0ac5ca714bf0",
+      "teacher_id": "fe3c27ea-10ca-427b-b46f-dbd5129cd088",
+      "subject_id": "fa033273-c982-48e5-9ba0-47d241266f54",
+      "target_room_id": null,
+      "constraints": {
+        "first_slot_days": null
+      }
+    },
+    {
+      "id": "84313fc5-b370-4b1b-9dcb-635ec6947c1a",
+      "class_id": "e72241af-f5a9-4696-b992-0ac5ca714bf0",
+      "teacher_id": "41158a3a-3f40-468f-873d-0c536201dabf",
+      "subject_id": "a416720d-6d5e-4291-a96b-0d6ac80a4435",
+      "target_room_id": null,
+      "constraints": {
+        "first_slot_days": [
+          "Tue"
+        ]
+      }
+    },
+    {
+      "id": "7699436c-b67d-4238-b81a-5f53395835a0",
+      "class_id": "e72241af-f5a9-4696-b992-0ac5ca714bf0",
+      "teacher_id": "752061c4-de9b-4799-9dda-a52963db934d",
+      "subject_id": "91cfb955-b14c-415c-bbf0-613ff2c77a2d",
+      "target_room_id": null,
+      "constraints": {
+        "first_slot_days": null
+      }
+    },
+    {
+      "id": "02158787-774c-42ff-92f6-9dc91aac13e9",
+      "class_id": "e72241af-f5a9-4696-b992-0ac5ca714bf0",
+      "teacher_id": "17c192a6-1f91-4b82-820c-bf28a05ef5fe",
+      "subject_id": "f21af8c8-6c88-4964-9a36-ffdaa7b85f5d",
+      "target_room_id": null,
+      "constraints": {
+        "first_slot_days": null
+      }
+    },
+    {
+      "id": "53989a7d-abd3-4b5d-808e-e9999ecced69",
+      "class_id": "33ac0746-0f85-4c11-a37c-f39400c02d35",
+      "teacher_id": "59fdf3f5-20ea-45ac-b8ef-c41c4c680e03",
+      "subject_id": "fbee4dcc-629f-48a5-a650-00f8c2f1d26a",
+      "target_room_id": null,
+      "constraints": {
+        "first_slot_days": [
+          "Tue",
+          "Wed"
+        ]
+      }
+    },
+    {
+      "id": "5b6f489b-081c-4f01-8dc6-505ec704854d",
+      "class_id": "33ac0746-0f85-4c11-a37c-f39400c02d35",
+      "teacher_id": "8dc2825c-d6c6-41f5-bf3b-f752517b683b",
+      "subject_id": "8286d792-ca98-4064-8e84-be04a00015c9",
+      "target_room_id": null,
+      "constraints": {
+        "first_slot_days": null
+      }
+    },
+    {
+      "id": "507c494a-ae77-48d1-aa28-6498abb247cf",
+      "class_id": "33ac0746-0f85-4c11-a37c-f39400c02d35",
+      "teacher_id": "41158a3a-3f40-468f-873d-0c536201dabf",
+      "subject_id": "29ca6442-bdd4-415a-8d77-6dd6c9f21761",
+      "target_room_id": null,
+      "constraints": {
+        "first_slot_days": null
+      }
+    },
+    {
+      "id": "8ccc82be-b0a7-4376-aeda-539f06b1767c",
+      "class_id": "33ac0746-0f85-4c11-a37c-f39400c02d35",
+      "teacher_id": "59fdf3f5-20ea-45ac-b8ef-c41c4c680e03",
+      "subject_id": "5dadd11e-bc47-49d4-875c-0151073157b9",
+      "target_room_id": null,
+      "constraints": {
+        "first_slot_days": null
+      }
+    }
+  ]
+}
