@@ -169,7 +169,7 @@
       "name": "Divya Thomas",
       "constraints": {
         "max_per_day": 5,
-        "max_per_week": 25,
+        "max_per_week": 3,
         "max_consecutive": 3
       }
     },
@@ -194,7 +194,7 @@
         "max_per_week": 12,
         "min_per_week": 11,
         "max_consecutive": 3,
-        "min_consecutive": 3
+        "min_consecutive": 2
       }
     },
     {
@@ -206,7 +206,7 @@
         "min_per_day": 1,
         "max_per_week": 5,
         "min_per_week": 5,
-        "max_consecutive": 1,
+        "max_consecutive": 2,
         "min_consecutive": 1
       }
     },
@@ -219,8 +219,8 @@
         "min_per_day": 0,
         "max_per_week": 8,
         "min_per_week": 7,
-        "max_consecutive": 2,
-        "min_consecutive": 2
+        "max_consecutive": 1,
+        "min_consecutive": 1
       }
     },
     {
@@ -269,8 +269,8 @@
         "morning_tendency": "Low",
         "max_per_day": 1,
         "min_per_day": 1,
-        "max_per_week": 5,
-        "min_per_week": 5,
+        "max_per_week": 3,
+        "min_per_week": 3,
         "max_consecutive": 1,
         "min_consecutive": 1
       }
@@ -295,8 +295,8 @@
         "morning_tendency": "Low",
         "max_per_day": 3,
         "min_per_day": 2,
-        "max_per_week": 12,
-        "min_per_week": 12,
+        "max_per_week": 6,
+        "min_per_week": 5,
         "max_consecutive": 1,
         "min_consecutive": 1
       }

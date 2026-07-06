@@ -1,0 +1,971 @@
+{
+  "entries": [
+    {
+      "assignment_id": "1303cd0f-35c8-414a-bac7-c2a475e1605a",
+      "class_name": "Grade 6 - A",
+      "room_name": "Room 101",
+      "subject_name": "Physical Education",
+      "teacher_name": "Divya Thomas",
+      "day": "Mon",
+      "slot": 3
+    },
+    {
+      "assignment_id": "1303cd0f-35c8-414a-bac7-c2a475e1605a",
+      "class_name": "Grade 6 - A",
+      "room_name": "Room 101",
+      "subject_name": "Physical Education",
+      "teacher_name": "Divya Thomas",
+      "day": "Mon",
+      "slot": 5
+    },
+    {
+      "assignment_id": "1303cd0f-35c8-414a-bac7-c2a475e1605a",
+      "class_name": "Grade 6 - A",
+      "room_name": "Room 101",
+      "subject_name": "Physical Education",
+      "teacher_name": "Divya Thomas",
+      "day": "Mon",
+      "slot": 7
+    },
+    {
+      "assignment_id": "1303cd0f-35c8-414a-bac7-c2a475e1605a",
+      "class_name": "Grade 6 - A",
+      "room_name": "Room 101",
+      "subject_name": "Physical Education",
+      "teacher_name": "Divya Thomas",
+      "day": "Tue",
+      "slot": 4
+    },
+    {
+      "assignment_id": "1303cd0f-35c8-414a-bac7-c2a475e1605a",
+      "class_name": "Grade 6 - A",
+      "room_name": "Room 101",
+      "subject_name": "Physical Education",
+      "teacher_name": "Divya Thomas",
+      "day": "Tue",
+      "slot": 6
+    },
+    {
+      "assignment_id": "1303cd0f-35c8-414a-bac7-c2a475e1605a",
+      "class_name": "Grade 6 - A",
+      "room_name": "Room 101",
+      "subject_name": "Physical Education",
+      "teacher_name": "Divya Thomas",
+      "day": "Wed",
+      "slot": 4
+    },
+    {
+      "assignment_id": "1303cd0f-35c8-414a-bac7-c2a475e1605a",
+      "class_name": "Grade 6 - A",
+      "room_name": "Room 101",
+      "subject_name": "Physical Education",
+      "teacher_name": "Divya Thomas",
+      "day": "Wed",
+      "slot": 6
+    },
+    {
+      "assignment_id": "1303cd0f-35c8-414a-bac7-c2a475e1605a",
+      "class_name": "Grade 6 - A",
+      "room_name": "Room 101",
+      "subject_name": "Physical Education",
+      "teacher_name": "Divya Thomas",
+      "day": "Thu",
+      "slot": 2
+    },
+    {
+      "assignment_id": "1303cd0f-35c8-414a-bac7-c2a475e1605a",
+      "class_name": "Grade 6 - A",
+      "room_name": "Room 101",
+      "subject_name": "Physical Education",
+      "teacher_name": "Divya Thomas",
+      "day": "Thu",
+      "slot": 6
+    },
+    {
+      "assignment_id": "1303cd0f-35c8-414a-bac7-c2a475e1605a",
+      "class_name": "Grade 6 - A",
+      "room_name": "Room 101",
+      "subject_name": "Physical Education",
+      "teacher_name": "Divya Thomas",
+      "day": "Fri",
+      "slot": 3
+    },
+    {
+      "assignment_id": "1303cd0f-35c8-414a-bac7-c2a475e1605a",
+      "class_name": "Grade 6 - A",
+      "room_name": "Room 101",
+      "subject_name": "Physical Education",
+      "teacher_name": "Divya Thomas",
+      "day": "Fri",
+      "slot": 6
+    },
+    {
+      "assignment_id": "8ba4e791-9770-4b14-91fe-ad2fa369f159",
+      "class_name": "Grade 6 - A",
+      "room_name": "Science Lab A",
+      "subject_name": "Chemistry",
+      "teacher_name": "Anita Iyer",
+      "day": "Wed",
+      "slot": 3
+    },
+    {
+      "assignment_id": "8ba4e791-9770-4b14-91fe-ad2fa369f159",
+      "class_name": "Grade 6 - A",
+      "room_name": "Science Lab A",
+      "subject_name": "Chemistry",
+      "teacher_name": "Anita Iyer",
+      "day": "Thu",
+      "slot": 1
+    },
+    {
+      "assignment_id": "8ba4e791-9770-4b14-91fe-ad2fa369f159",
+      "class_name": "Grade 6 - A",
+      "room_name": "Science Lab A",
+      "subject_name": "Chemistry",
+      "teacher_name": "Anita Iyer",
+      "day": "Fri",
+      "slot": 4
+    },
+    {
+      "assignment_id": "d6a10f02-4501-4c97-97c0-3e59bf1512c2",
+      "class_name": "Grade 6 - A",
+      "room_name": "Science Lab A",
+      "subject_name": "Biology",
+      "teacher_name": "Anita Iyer",
+      "day": "Mon",
+      "slot": 1
+    },
+    {
+      "assignment_id": "d6a10f02-4501-4c97-97c0-3e59bf1512c2",
+      "class_name": "Grade 6 - A",
+      "room_name": "Science Lab A",
+      "subject_name": "Biology",
+      "teacher_name": "Anita Iyer",
+      "day": "Mon",
+      "slot": 2
+    },
+    {
+      "assignment_id": "d6a10f02-4501-4c97-97c0-3e59bf1512c2",
+      "class_name": "Grade 6 - A",
+      "room_name": "Science Lab A",
+      "subject_name": "Biology",
+      "teacher_name": "Anita Iyer",
+      "day": "Tue",
+      "slot": 1
+    },
+    {
+      "assignment_id": "d6a10f02-4501-4c97-97c0-3e59bf1512c2",
+      "class_name": "Grade 6 - A",
+      "room_name": "Science Lab A",
+      "subject_name": "Biology",
+      "teacher_name": "Anita Iyer",
+      "day": "Tue",
+      "slot": 2
+    },
+    {
+      "assignment_id": "d6a10f02-4501-4c97-97c0-3e59bf1512c2",
+      "class_name": "Grade 6 - A",
+      "room_name": "Science Lab A",
+      "subject_name": "Biology",
+      "teacher_name": "Anita Iyer",
+      "day": "Wed",
+      "slot": 1
+    },
+    {
+      "assignment_id": "d6a10f02-4501-4c97-97c0-3e59bf1512c2",
+      "class_name": "Grade 6 - A",
+      "room_name": "Science Lab A",
+      "subject_name": "Biology",
+      "teacher_name": "Anita Iyer",
+      "day": "Wed",
+      "slot": 2
+    },
+    {
+      "assignment_id": "d6a10f02-4501-4c97-97c0-3e59bf1512c2",
+      "class_name": "Grade 6 - A",
+      "room_name": "Science Lab A",
+      "subject_name": "Biology",
+      "teacher_name": "Anita Iyer",
+      "day": "Thu",
+      "slot": 3
+    },
+    {
+      "assignment_id": "d6a10f02-4501-4c97-97c0-3e59bf1512c2",
+      "class_name": "Grade 6 - A",
+      "room_name": "Science Lab A",
+      "subject_name": "Biology",
+      "teacher_name": "Anita Iyer",
+      "day": "Thu",
+      "slot": 4
+    },
+    {
+      "assignment_id": "d6a10f02-4501-4c97-97c0-3e59bf1512c2",
+      "class_name": "Grade 6 - A",
+      "room_name": "Science Lab A",
+      "subject_name": "Biology",
+      "teacher_name": "Anita Iyer",
+      "day": "Fri",
+      "slot": 1
+    },
+    {
+      "assignment_id": "d6a10f02-4501-4c97-97c0-3e59bf1512c2",
+      "class_name": "Grade 6 - A",
+      "room_name": "Science Lab A",
+      "subject_name": "Biology",
+      "teacher_name": "Anita Iyer",
+      "day": "Fri",
+      "slot": 2
+    },
+    {
+      "assignment_id": "21916d7a-4c9a-4750-a70a-636197c1f269",
+      "class_name": "Grade 6 - A",
+      "room_name": "Computer Lab A",
+      "subject_name": "Computer Science",
+      "teacher_name": "Vinod Menon",
+      "day": "Mon",
+      "slot": 4
+    },
+    {
+      "assignment_id": "21916d7a-4c9a-4750-a70a-636197c1f269",
+      "class_name": "Grade 6 - A",
+      "room_name": "Computer Lab A",
+      "subject_name": "Computer Science",
+      "teacher_name": "Vinod Menon",
+      "day": "Mon",
+      "slot": 6
+    },
+    {
+      "assignment_id": "21916d7a-4c9a-4750-a70a-636197c1f269",
+      "class_name": "Grade 6 - A",
+      "room_name": "Computer Lab A",
+      "subject_name": "Computer Science",
+      "teacher_name": "Vinod Menon",
+      "day": "Tue",
+      "slot": 3
+    },
+    {
+      "assignment_id": "21916d7a-4c9a-4750-a70a-636197c1f269",
+      "class_name": "Grade 6 - A",
+      "room_name": "Computer Lab A",
+      "subject_name": "Computer Science",
+      "teacher_name": "Vinod Menon",
+      "day": "Tue",
+      "slot": 5
+    },
+    {
+      "assignment_id": "21916d7a-4c9a-4750-a70a-636197c1f269",
+      "class_name": "Grade 6 - A",
+      "room_name": "Computer Lab A",
+      "subject_name": "Computer Science",
+      "teacher_name": "Vinod Menon",
+      "day": "Tue",
+      "slot": 7
+    },
+    {
+      "assignment_id": "21916d7a-4c9a-4750-a70a-636197c1f269",
+      "class_name": "Grade 6 - A",
+      "room_name": "Computer Lab A",
+      "subject_name": "Computer Science",
+      "teacher_name": "Vinod Menon",
+      "day": "Wed",
+      "slot": 5
+    },
+    {
+      "assignment_id": "21916d7a-4c9a-4750-a70a-636197c1f269",
+      "class_name": "Grade 6 - A",
+      "room_name": "Computer Lab A",
+      "subject_name": "Computer Science",
+      "teacher_name": "Vinod Menon",
+      "day": "Wed",
+      "slot": 7
+    },
+    {
+      "assignment_id": "21916d7a-4c9a-4750-a70a-636197c1f269",
+      "class_name": "Grade 6 - A",
+      "room_name": "Computer Lab A",
+      "subject_name": "Computer Science",
+      "teacher_name": "Vinod Menon",
+      "day": "Thu",
+      "slot": 5
+    },
+    {
+      "assignment_id": "21916d7a-4c9a-4750-a70a-636197c1f269",
+      "class_name": "Grade 6 - A",
+      "room_name": "Computer Lab A",
+      "subject_name": "Computer Science",
+      "teacher_name": "Vinod Menon",
+      "day": "Thu",
+      "slot": 7
+    },
+    {
+      "assignment_id": "21916d7a-4c9a-4750-a70a-636197c1f269",
+      "class_name": "Grade 6 - A",
+      "room_name": "Computer Lab A",
+      "subject_name": "Computer Science",
+      "teacher_name": "Vinod Menon",
+      "day": "Fri",
+      "slot": 5
+    },
+    {
+      "assignment_id": "21916d7a-4c9a-4750-a70a-636197c1f269",
+      "class_name": "Grade 6 - A",
+      "room_name": "Computer Lab A",
+      "subject_name": "Computer Science",
+      "teacher_name": "Vinod Menon",
+      "day": "Fri",
+      "slot": 7
+    },
+    {
+      "assignment_id": "2da499f6-81ae-429f-b487-aa465c5e6fe7",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "Physical Education",
+      "teacher_name": "Divya Thomas",
+      "day": "Mon",
+      "slot": 2
+    },
+    {
+      "assignment_id": "2da499f6-81ae-429f-b487-aa465c5e6fe7",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "Physical Education",
+      "teacher_name": "Divya Thomas",
+      "day": "Mon",
+      "slot": 6
+    },
+    {
+      "assignment_id": "2da499f6-81ae-429f-b487-aa465c5e6fe7",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "Physical Education",
+      "teacher_name": "Divya Thomas",
+      "day": "Tue",
+      "slot": 2
+    },
+    {
+      "assignment_id": "2da499f6-81ae-429f-b487-aa465c5e6fe7",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "Physical Education",
+      "teacher_name": "Divya Thomas",
+      "day": "Tue",
+      "slot": 5
+    },
+    {
+      "assignment_id": "2da499f6-81ae-429f-b487-aa465c5e6fe7",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "Physical Education",
+      "teacher_name": "Divya Thomas",
+      "day": "Wed",
+      "slot": 3
+    },
+    {
+      "assignment_id": "2da499f6-81ae-429f-b487-aa465c5e6fe7",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "Physical Education",
+      "teacher_name": "Divya Thomas",
+      "day": "Wed",
+      "slot": 7
+    },
+    {
+      "assignment_id": "2da499f6-81ae-429f-b487-aa465c5e6fe7",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "Physical Education",
+      "teacher_name": "Divya Thomas",
+      "day": "Thu",
+      "slot": 3
+    },
+    {
+      "assignment_id": "2da499f6-81ae-429f-b487-aa465c5e6fe7",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "Physical Education",
+      "teacher_name": "Divya Thomas",
+      "day": "Thu",
+      "slot": 5
+    },
+    {
+      "assignment_id": "2da499f6-81ae-429f-b487-aa465c5e6fe7",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "Physical Education",
+      "teacher_name": "Divya Thomas",
+      "day": "Thu",
+      "slot": 7
+    },
+    {
+      "assignment_id": "2da499f6-81ae-429f-b487-aa465c5e6fe7",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "Physical Education",
+      "teacher_name": "Divya Thomas",
+      "day": "Fri",
+      "slot": 2
+    },
+    {
+      "assignment_id": "2da499f6-81ae-429f-b487-aa465c5e6fe7",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "Physical Education",
+      "teacher_name": "Divya Thomas",
+      "day": "Fri",
+      "slot": 4
+    },
+    {
+      "assignment_id": "2da499f6-81ae-429f-b487-aa465c5e6fe7",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "Physical Education",
+      "teacher_name": "Divya Thomas",
+      "day": "Fri",
+      "slot": 7
+    },
+    {
+      "assignment_id": "3b527634-1653-49ea-833d-aa8b65cd2571",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "Geography",
+      "teacher_name": "Kiran Das",
+      "day": "Mon",
+      "slot": 7
+    },
+    {
+      "assignment_id": "3b527634-1653-49ea-833d-aa8b65cd2571",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "Geography",
+      "teacher_name": "Kiran Das",
+      "day": "Tue",
+      "slot": 4
+    },
+    {
+      "assignment_id": "3b527634-1653-49ea-833d-aa8b65cd2571",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "Geography",
+      "teacher_name": "Kiran Das",
+      "day": "Wed",
+      "slot": 6
+    },
+    {
+      "assignment_id": "3b527634-1653-49ea-833d-aa8b65cd2571",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "Geography",
+      "teacher_name": "Kiran Das",
+      "day": "Thu",
+      "slot": 6
+    },
+    {
+      "assignment_id": "3b527634-1653-49ea-833d-aa8b65cd2571",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "Geography",
+      "teacher_name": "Kiran Das",
+      "day": "Fri",
+      "slot": 5
+    },
+    {
+      "assignment_id": "84313fc5-b370-4b1b-9dcb-635ec6947c1a",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "Mathematics",
+      "teacher_name": "Ajay Thomas",
+      "day": "Mon",
+      "slot": 1
+    },
+    {
+      "assignment_id": "84313fc5-b370-4b1b-9dcb-635ec6947c1a",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "Mathematics",
+      "teacher_name": "Ajay Thomas",
+      "day": "Mon",
+      "slot": 3
+    },
+    {
+      "assignment_id": "84313fc5-b370-4b1b-9dcb-635ec6947c1a",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "Mathematics",
+      "teacher_name": "Ajay Thomas",
+      "day": "Tue",
+      "slot": 1
+    },
+    {
+      "assignment_id": "84313fc5-b370-4b1b-9dcb-635ec6947c1a",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "Mathematics",
+      "teacher_name": "Ajay Thomas",
+      "day": "Tue",
+      "slot": 3
+    },
+    {
+      "assignment_id": "84313fc5-b370-4b1b-9dcb-635ec6947c1a",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "Mathematics",
+      "teacher_name": "Ajay Thomas",
+      "day": "Wed",
+      "slot": 2
+    },
+    {
+      "assignment_id": "84313fc5-b370-4b1b-9dcb-635ec6947c1a",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "Mathematics",
+      "teacher_name": "Ajay Thomas",
+      "day": "Thu",
+      "slot": 1
+    },
+    {
+      "assignment_id": "84313fc5-b370-4b1b-9dcb-635ec6947c1a",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "Mathematics",
+      "teacher_name": "Ajay Thomas",
+      "day": "Thu",
+      "slot": 4
+    },
+    {
+      "assignment_id": "84313fc5-b370-4b1b-9dcb-635ec6947c1a",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "Mathematics",
+      "teacher_name": "Ajay Thomas",
+      "day": "Fri",
+      "slot": 1
+    },
+    {
+      "assignment_id": "7699436c-b67d-4238-b81a-5f53395835a0",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "Chemistry",
+      "teacher_name": "John Varma",
+      "day": "Wed",
+      "slot": 1
+    },
+    {
+      "assignment_id": "7699436c-b67d-4238-b81a-5f53395835a0",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "Chemistry",
+      "teacher_name": "John Varma",
+      "day": "Thu",
+      "slot": 2
+    },
+    {
+      "assignment_id": "7699436c-b67d-4238-b81a-5f53395835a0",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "Chemistry",
+      "teacher_name": "John Varma",
+      "day": "Fri",
+      "slot": 3
+    },
+    {
+      "assignment_id": "02158787-774c-42ff-92f6-9dc91aac13e9",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "English",
+      "teacher_name": "Ravi Rao",
+      "day": "Mon",
+      "slot": 4
+    },
+    {
+      "assignment_id": "02158787-774c-42ff-92f6-9dc91aac13e9",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "English",
+      "teacher_name": "Ravi Rao",
+      "day": "Mon",
+      "slot": 5
+    },
+    {
+      "assignment_id": "02158787-774c-42ff-92f6-9dc91aac13e9",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "English",
+      "teacher_name": "Ravi Rao",
+      "day": "Tue",
+      "slot": 6
+    },
+    {
+      "assignment_id": "02158787-774c-42ff-92f6-9dc91aac13e9",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "English",
+      "teacher_name": "Ravi Rao",
+      "day": "Tue",
+      "slot": 7
+    },
+    {
+      "assignment_id": "02158787-774c-42ff-92f6-9dc91aac13e9",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "English",
+      "teacher_name": "Ravi Rao",
+      "day": "Wed",
+      "slot": 4
+    },
+    {
+      "assignment_id": "02158787-774c-42ff-92f6-9dc91aac13e9",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "English",
+      "teacher_name": "Ravi Rao",
+      "day": "Wed",
+      "slot": 5
+    },
+    {
+      "assignment_id": "02158787-774c-42ff-92f6-9dc91aac13e9",
+      "class_name": "Grade 6 - B",
+      "room_name": "Room 102",
+      "subject_name": "English",
+      "teacher_name": "Ravi Rao",
+      "day": "Fri",
+      "slot": 6
+    },
+    {
+      "assignment_id": "53989a7d-abd3-4b5d-808e-e9999ecced69",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Art",
+      "teacher_name": "Anjali George",
+      "day": "Mon",
+      "slot": 2
+    },
+    {
+      "assignment_id": "53989a7d-abd3-4b5d-808e-e9999ecced69",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Art",
+      "teacher_name": "Anjali George",
+      "day": "Tue",
+      "slot": 1
+    },
+    {
+      "assignment_id": "53989a7d-abd3-4b5d-808e-e9999ecced69",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Art",
+      "teacher_name": "Anjali George",
+      "day": "Wed",
+      "slot": 1
+    },
+    {
+      "assignment_id": "53989a7d-abd3-4b5d-808e-e9999ecced69",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Art",
+      "teacher_name": "Anjali George",
+      "day": "Thu",
+      "slot": 4
+    },
+    {
+      "assignment_id": "53989a7d-abd3-4b5d-808e-e9999ecced69",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Art",
+      "teacher_name": "Anjali George",
+      "day": "Fri",
+      "slot": 6
+    },
+    {
+      "assignment_id": "5b6f489b-081c-4f01-8dc6-505ec704854d",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Hindi",
+      "teacher_name": "Anjali Rao",
+      "day": "Mon",
+      "slot": 4
+    },
+    {
+      "assignment_id": "5b6f489b-081c-4f01-8dc6-505ec704854d",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Hindi",
+      "teacher_name": "Anjali Rao",
+      "day": "Mon",
+      "slot": 5
+    },
+    {
+      "assignment_id": "5b6f489b-081c-4f01-8dc6-505ec704854d",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Hindi",
+      "teacher_name": "Anjali Rao",
+      "day": "Tue",
+      "slot": 3
+    },
+    {
+      "assignment_id": "5b6f489b-081c-4f01-8dc6-505ec704854d",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Hindi",
+      "teacher_name": "Anjali Rao",
+      "day": "Tue",
+      "slot": 4
+    },
+    {
+      "assignment_id": "5b6f489b-081c-4f01-8dc6-505ec704854d",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Hindi",
+      "teacher_name": "Anjali Rao",
+      "day": "Thu",
+      "slot": 1
+    },
+    {
+      "assignment_id": "5b6f489b-081c-4f01-8dc6-505ec704854d",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Hindi",
+      "teacher_name": "Anjali Rao",
+      "day": "Thu",
+      "slot": 2
+    },
+    {
+      "assignment_id": "5b6f489b-081c-4f01-8dc6-505ec704854d",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Hindi",
+      "teacher_name": "Anjali Rao",
+      "day": "Fri",
+      "slot": 1
+    },
+    {
+      "assignment_id": "5b6f489b-081c-4f01-8dc6-505ec704854d",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Hindi",
+      "teacher_name": "Anjali Rao",
+      "day": "Fri",
+      "slot": 2
+    },
+    {
+      "assignment_id": "507c494a-ae77-48d1-aa28-6498abb247cf",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Economics",
+      "teacher_name": "Ajay Thomas",
+      "day": "Mon",
+      "slot": 6
+    },
+    {
+      "assignment_id": "507c494a-ae77-48d1-aa28-6498abb247cf",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Economics",
+      "teacher_name": "Ajay Thomas",
+      "day": "Mon",
+      "slot": 7
+    },
+    {
+      "assignment_id": "507c494a-ae77-48d1-aa28-6498abb247cf",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Economics",
+      "teacher_name": "Ajay Thomas",
+      "day": "Tue",
+      "slot": 6
+    },
+    {
+      "assignment_id": "507c494a-ae77-48d1-aa28-6498abb247cf",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Economics",
+      "teacher_name": "Ajay Thomas",
+      "day": "Tue",
+      "slot": 7
+    },
+    {
+      "assignment_id": "507c494a-ae77-48d1-aa28-6498abb247cf",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Economics",
+      "teacher_name": "Ajay Thomas",
+      "day": "Wed",
+      "slot": 5
+    },
+    {
+      "assignment_id": "507c494a-ae77-48d1-aa28-6498abb247cf",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Economics",
+      "teacher_name": "Ajay Thomas",
+      "day": "Wed",
+      "slot": 6
+    },
+    {
+      "assignment_id": "507c494a-ae77-48d1-aa28-6498abb247cf",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Economics",
+      "teacher_name": "Ajay Thomas",
+      "day": "Wed",
+      "slot": 7
+    },
+    {
+      "assignment_id": "507c494a-ae77-48d1-aa28-6498abb247cf",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Economics",
+      "teacher_name": "Ajay Thomas",
+      "day": "Thu",
+      "slot": 6
+    },
+    {
+      "assignment_id": "507c494a-ae77-48d1-aa28-6498abb247cf",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Economics",
+      "teacher_name": "Ajay Thomas",
+      "day": "Thu",
+      "slot": 7
+    },
+    {
+      "assignment_id": "507c494a-ae77-48d1-aa28-6498abb247cf",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Economics",
+      "teacher_name": "Ajay Thomas",
+      "day": "Fri",
+      "slot": 3
+    },
+    {
+      "assignment_id": "507c494a-ae77-48d1-aa28-6498abb247cf",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Economics",
+      "teacher_name": "Ajay Thomas",
+      "day": "Fri",
+      "slot": 4
+    },
+    {
+      "assignment_id": "8ccc82be-b0a7-4376-aeda-539f06b1767c",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Physical Education",
+      "teacher_name": "Anjali George",
+      "day": "Mon",
+      "slot": 1
+    },
+    {
+      "assignment_id": "8ccc82be-b0a7-4376-aeda-539f06b1767c",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Physical Education",
+      "teacher_name": "Anjali George",
+      "day": "Mon",
+      "slot": 3
+    },
+    {
+      "assignment_id": "8ccc82be-b0a7-4376-aeda-539f06b1767c",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Physical Education",
+      "teacher_name": "Anjali George",
+      "day": "Tue",
+      "slot": 2
+    },
+    {
+      "assignment_id": "8ccc82be-b0a7-4376-aeda-539f06b1767c",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Physical Education",
+      "teacher_name": "Anjali George",
+      "day": "Tue",
+      "slot": 5
+    },
+    {
+      "assignment_id": "8ccc82be-b0a7-4376-aeda-539f06b1767c",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Physical Education",
+      "teacher_name": "Anjali George",
+      "day": "Wed",
+      "slot": 2
+    },
+    {
+      "assignment_id": "8ccc82be-b0a7-4376-aeda-539f06b1767c",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Physical Education",
+      "teacher_name": "Anjali George",
+      "day": "Wed",
+      "slot": 4
+    },
+    {
+      "assignment_id": "8ccc82be-b0a7-4376-aeda-539f06b1767c",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Physical Education",
+      "teacher_name": "Anjali George",
+      "day": "Thu",
+      "slot": 3
+    },
+    {
+      "assignment_id": "8ccc82be-b0a7-4376-aeda-539f06b1767c",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Physical Education",
+      "teacher_name": "Anjali George",
+      "day": "Thu",
+      "slot": 5
+    },
+    {
+      "assignment_id": "8ccc82be-b0a7-4376-aeda-539f06b1767c",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Physical Education",
+      "teacher_name": "Anjali George",
+      "day": "Fri",
+      "slot": 5
+    },
+    {
+      "assignment_id": "8ccc82be-b0a7-4376-aeda-539f06b1767c",
+      "class_name": "Grade 6 - C",
+      "room_name": "Room 103",
+      "subject_name": "Physical Education",
+      "teacher_name": "Anjali George",
+      "day": "Fri",
+      "slot": 7
+    }
+  ],
+  "violations": [
+    {
+      "error_msg": "Max consecutive classes exceeded Ajay Thomas (limit: 2)",
+      "val": 1
+    },
+    {
+      "error_msg": "Min weekly classes didnt meet Computer Science (limit: 12)",
+      "val": 1
+    },
+    {
+      "error_msg": "Min weekly classes didnt meet Physical Education (limit: 11)",
+      "val": 1
+    },
+    {
+      "error_msg": "Min consecutive classes didnt met for Economics (required: 3)",
+      "val": 1
+    },
+    {
+      "error_msg": "Min consecutive classes didnt met for Economics (required: 3)",
+      "val": 1
+    },
+    {
+      "error_msg": "Min consecutive classes didnt met for Economics (required: 3)",
+      "val": 1
+    },
+    {
+      "error_msg": "Min consecutive classes didnt met for Economics (required: 3)",
+      "val": 1
+    }
+  ],
+  "success": true
+}

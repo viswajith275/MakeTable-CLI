@@ -1,6 +1,6 @@
 from ortools.sat.python import cp_model
 from dataclasses import dataclass
-from src.models import TimeTableGenerationInput, WeekDay, TimeTableEntryOutput, ViolationOut, GeneratedResponse
+from models import TimeTableGenerationInput, WeekDay, TimeTableEntryOutput, ViolationOut, GeneratedResponse
 import collections
 from typing import List, Dict
 
@@ -12,7 +12,7 @@ class SlackTracker:
 
 
 class TimeTableGenerator:
-    def __init__(self, RawData: TimeTableGenerationInput) -> None:
+    def __init__(self, RawData: TimeTableGenerationInput, HintData: GeneratedResponse) -> None:
 
         self.ASSIGNMENT_WEIGHT = 10
 
@@ -46,6 +46,8 @@ class TimeTableGenerator:
             d: i for i, d in enumerate(WeekDay)
         }
         self.days = [self.day_to_index[d] for d in RawData.project.days]
+
+        self.hint_vars = HintData
 
         # Change values accordingly for better performaces (Dont forget)
 
@@ -134,6 +136,16 @@ class TimeTableGenerator:
                     self.class_subject_schedule[class_.id][assignment.subject_id][day].append(var)
                     self.assignment_schedule[assignment.id][day][slot] = var
     
+    def _apply_hints_vars(self) -> None:
+
+        if self.hint_vars is None:
+            return
+                
+        for entry in self.hint_vars.entries:
+
+            if self.assignment_schedule[entry.assignment_id][self.day_to_index[entry.day]][entry.slot - 1] is not None:
+                self.model.add_hint(self.assignment_schedule[entry.assignment_id][self.day_to_index[entry.day]][entry.slot - 1], 1)
+        
 
     def _apply_generic_conditions(self) -> None:
 
@@ -610,6 +622,7 @@ class TimeTableGenerator:
     def _build_and_apply_all_constraints(self) -> None:
 
         self._create_and_apply_variables()
+        self._apply_hints_vars()
         self._apply_generic_conditions()
         self._apply_class_constraints()
         self._apply_teacher_constraints()

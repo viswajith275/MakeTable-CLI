@@ -10,7 +10,7 @@ from rich.table import Table
 from pydantic import ValidationError
 from collections import defaultdict
 
-from src.models import TimeTableGenerationInput, GeneratedResponse, TimeTableEntryOutput
+from models import TimeTableGenerationInput, GeneratedResponse, TimeTableEntryOutput
 
 app = typer.Typer(
     name="timetable",
@@ -23,7 +23,6 @@ console = Console()
 class OutputFormat(str, Enum):
     json = "json"
     table = "table"
-
 
 def _load_input(input_file: Path) -> TimeTableGenerationInput:
     if not input_file.exists():
@@ -46,6 +45,26 @@ def _load_input(input_file: Path) -> TimeTableGenerationInput:
         console.print(f"[red]Invalid JSON:[/red] {e}")
         raise typer.Exit(code=1)
 
+def _load_hint_input(input_file: Path) -> GeneratedResponse:
+    if not input_file.exists():
+        console.print(f"[red]Input file not found:[/red] {input_file}")
+        raise typer.Exit(code=1)
+    
+    try:
+        raw_text = input_file.read_text()
+        return GeneratedResponse.model_validate_json(raw_text)
+    
+    except ValidationError as e:
+
+        console.print("[red]Hint validation failed:[/red]")
+        for err in e.errors():
+            loc = " -> ".join(str(p) for p in err["loc"])
+            console.print(f"  [yellow]{loc}[/yellow]: {err['msg']}")
+        raise typer.Exit(code=1)
+    
+    except json.JSONDecodeError as e:
+        console.print(f"[red]Invalid JSON:[/red] {e}")
+        raise typer.Exit(code=1)
 
 # Only used for testing and raw cli usage
 def _print_entries_table(response: GeneratedResponse):
@@ -139,16 +158,18 @@ def validate(
 def generate(
     input_file: Path = typer.Argument(..., help="Path to the input JSON file matching TimeTableGenerationInput"),
     output_file: Path = typer.Option(None, "--output", "-o", help="Where to write results (omit to print to stdout)"),
+    hint_file: Path = typer.Option(None,"--previous-hint", "-hp", help="Hints for creating timetable from previous responses"),
     fmt: OutputFormat = typer.Option(OutputFormat.table, "--format", "-f", help="Output format"),
     time_limit: float = typer.Option(60.0, "--time-limit", "-t", help="Solver time budget in seconds"),
     seed: int = typer.Option(42, "--seed", "-s", help="Random seed for reproducibility"),
     show_violations: bool = typer.Option(True, "--violations/--no-violations", help="Print violation report after generation"),
 ):
     data = _load_input(input_file)
+    hint_timetable = _load_hint_input(hint_file)
 
     with console.status("[bold green]Solving..."):
-        from src.solver import TimeTableGenerator
-        generator = TimeTableGenerator(data)
+        from solver import TimeTableGenerator
+        generator = TimeTableGenerator(RawData=data, HintData=hint_timetable)
         response: GeneratedResponse = generator.solve(
             time_limit_sec=time_limit,
             seed=seed,
