@@ -12,7 +12,7 @@ class SlackTracker:
 
 
 class TimeTableGenerator:
-    def __init__(self, RawData: TimeTableGenerationInput, HintData: GeneratedResponse) -> None:
+    def __init__(self, RawData: TimeTableGenerationInput, HintData: GeneratedResponse | None = None) -> None:
 
         self.ASSIGNMENT_WEIGHT = 10
 

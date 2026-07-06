@@ -45,7 +45,10 @@ def _load_input(input_file: Path) -> TimeTableGenerationInput:
         console.print(f"[red]Invalid JSON:[/red] {e}")
         raise typer.Exit(code=1)
 
-def _load_hint_input(input_file: Path) -> GeneratedResponse:
+def _load_hint_input(input_file: Path | None) -> GeneratedResponse | None:
+    if not input_file:
+        return None
+    
     if not input_file.exists():
         console.print(f"[red]Input file not found:[/red] {input_file}")
         raise typer.Exit(code=1)
