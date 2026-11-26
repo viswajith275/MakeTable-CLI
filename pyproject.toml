@@ -1,7 +1,7 @@
 [project]
 name = "timetable-generation"
 version = "0.1.0"
-description = "Add your description here"
+description = "School timetable generation with OR-Tools CP-SAT, a CLI and a TUI"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
@@ -9,5 +9,21 @@ dependencies = [
     "ortools>=9.15.6755",
     "pydantic>=2.13.4",
     "rich>=15.0.0",
+    "textual>=8.2.8",
     "typer>=0.26.8",
+]
+
+[project.scripts]
+timetable = "maketable.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/maketable"]
+
+[dependency-groups]
+dev = [
+    "zstandard>=0.25.0",
 ]

@@ -1,0 +1,906 @@
+{
+  "project": {
+    "id": "1c673e34-0aa5-4dc8-8780-8bd89b8e258f",
+    "name": "Dept Schedule (college)",
+    "slots": 7,
+    "days": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri"
+    ],
+    "break_slots": [
+      4
+    ]
+  },
+  "rooms": [
+    {
+      "id": "0d096dff-f154-4f8d-91c7-305749d68443",
+      "name": "Room 101",
+      "is_lab": false,
+      "constraints": {
+        "capacity": 1
+      }
+    },
+    {
+      "id": "e2814e11-83fc-4c19-8126-1c37ef8046c6",
+      "name": "Room 102",
+      "is_lab": false,
+      "constraints": {
+        "capacity": 1
+      }
+    },
+    {
+      "id": "6ccf63f6-2d51-40f2-bb9c-e51e4479e0f5",
+      "name": "Room 103",
+      "is_lab": false,
+      "constraints": {
+        "capacity": 1
+      }
+    },
+    {
+      "id": "5e549c4a-5b43-424a-bca2-ab2caee26f03",
+      "name": "Room 104",
+      "is_lab": false,
+      "constraints": {
+        "capacity": 1
+      }
+    },
+    {
+      "id": "8d567621-2e6d-4d11-8bb6-99f68d2fb076",
+      "name": "Lecture Hall A",
+      "is_lab": false,
+      "constraints": {
+        "capacity": 3
+      }
+    },
+    {
+      "id": "1ee8c4ea-2b97-45f8-b891-d1d16d542f0f",
+      "name": "Science Lab A",
+      "is_lab": true,
+      "constraints": {
+        "capacity": 1
+      }
+    },
+    {
+      "id": "ad18710a-2208-4e4d-83be-7b41bc676dba",
+      "name": "Computer Lab A",
+      "is_lab": true,
+      "constraints": {
+        "capacity": 1
+      }
+    }
+  ],
+  "classes": [
+    {
+      "id": "c51e5a5a-d01b-495b-a7f3-4b1f1760bf32",
+      "name": "CSE-A",
+      "room_id": "0d096dff-f154-4f8d-91c7-305749d68443",
+      "constraints": {}
+    },
+    {
+      "id": "e0e64d69-aa75-44d9-8326-9c436694ea46",
+      "name": "CSE-B",
+      "room_id": "e2814e11-83fc-4c19-8126-1c37ef8046c6",
+      "constraints": {}
+    },
+    {
+      "id": "4ff63876-b4fa-4a53-a526-41ff2ecb031b",
+      "name": "CSE-C",
+      "room_id": "6ccf63f6-2d51-40f2-bb9c-e51e4479e0f5",
+      "constraints": {}
+    }
+  ],
+  "teachers": [
+    {
+      "id": "42029267-78cb-4360-bf37-e00eae46d3c8",
+      "name": "Divya Kumar",
+      "constraints": {
+        "max_per_day": 4,
+        "max_per_week": 12,
+        "max_consecutive": 2,
+        "max_days_per_week": null,
+        "unavailable_slots": [
+          {
+            "day": "Mon",
+            "slot": 5
+          }
+        ],
+        "avoid_slots": [
+          {
+            "day": "Fri",
+            "slot": 7
+          },
+          {
+            "day": "Thu",
+            "slot": 7
+          }
+        ]
+      }
+    },
+    {
+      "id": "d7a17c99-562d-40a4-ae36-153bf2f4656b",
+      "name": "Asha Pillai",
+      "constraints": {
+        "max_per_day": 5,
+        "max_per_week": 19,
+        "max_consecutive": 2,
+        "max_days_per_week": null,
+        "unavailable_slots": [],
+        "avoid_slots": []
+      }
+    },
+    {
+      "id": "205dc1ab-cf19-4905-9006-dfda87042fde",
+      "name": "Anita Nambiar",
+      "constraints": {
+        "max_per_day": 5,
+        "max_per_week": 12,
+        "max_consecutive": 2,
+        "max_days_per_week": null,
+        "unavailable_slots": [],
+        "avoid_slots": []
+      }
+    },
+    {
+      "id": "c00aa55a-208a-4754-8bd6-fcd408c17296",
+      "name": "Vinod Das",
+      "constraints": {
+        "max_per_day": 4,
+        "max_per_week": 14,
+        "max_consecutive": 3,
+        "max_days_per_week": null,
+        "unavailable_slots": [],
+        "avoid_slots": []
+      }
+    },
+    {
+      "id": "500d8d43-3de6-43a0-a521-7dc995a901bc",
+      "name": "Lakshmi Mathew",
+      "constraints": {
+        "max_per_day": 5,
+        "max_per_week": 14,
+        "max_consecutive": 3,
+        "max_days_per_week": 4,
+        "unavailable_slots": [
+          {
+            "day": "Thu",
+            "slot": 6
+          }
+        ],
+        "avoid_slots": []
+      }
+    },
+    {
+      "id": "7582c61d-907f-4f67-8f23-9f0a927c9d53",
+      "name": "John Kulkarni",
+      "constraints": {
+        "max_per_day": 4,
+        "max_per_week": 8,
+        "max_consecutive": 2,
+        "max_days_per_week": null,
+        "unavailable_slots": [
+          {
+            "day": "Thu",
+            "slot": 7
+          }
+        ],
+        "avoid_slots": []
+      }
+    },
+    {
+      "id": "af3b2202-33f9-4654-944a-060b2847c755",
+      "name": "Manoj Krishnan",
+      "constraints": {
+        "max_per_day": 5,
+        "max_per_week": 9,
+        "max_consecutive": 3,
+        "max_days_per_week": null,
+        "unavailable_slots": [
+          {
+            "day": "Fri",
+            "slot": 2
+          }
+        ],
+        "avoid_slots": []
+      }
+    },
+    {
+      "id": "727979be-5166-4e24-924d-d8321095bdf8",
+      "name": "Vinod Pillai",
+      "constraints": {
+        "max_per_day": 6,
+        "max_per_week": 6,
+        "max_consecutive": 3,
+        "max_days_per_week": null,
+        "unavailable_slots": [],
+        "avoid_slots": []
+      }
+    },
+    {
+      "id": "5295f07a-cd96-42b8-9f9c-c53775efb314",
+      "name": "Sanjay Nambiar",
+      "constraints": {
+        "max_per_day": 6,
+        "max_per_week": 12,
+        "max_consecutive": 2,
+        "max_days_per_week": null,
+        "unavailable_slots": [
+          {
+            "day": "Fri",
+            "slot": 6
+          }
+        ],
+        "avoid_slots": []
+      }
+    }
+  ],
+  "subjects": [
+    {
+      "id": "dab6b553-8dd3-4c34-bf28-0a4191773e21",
+      "name": "Computer Architecture",
+      "constraints": {
+        "morning_tendency": "Med",
+        "max_per_day": 2,
+        "min_per_day": 0,
+        "max_per_week": 4,
+        "min_per_week": 3,
+        "max_consecutive": 2,
+        "min_consecutive": 1
+      }
+    },
+    {
+      "id": "dac2ed14-5617-4632-a6a2-2542d9b6f690",
+      "name": "Discrete Mathematics",
+      "constraints": {
+        "morning_tendency": "High",
+        "max_per_day": 2,
+        "min_per_day": 0,
+        "max_per_week": 5,
+        "min_per_week": 4,
+        "max_consecutive": 2,
+        "min_consecutive": 1
+      }
+    },
+    {
+      "id": "ea55a017-6b54-4bc7-bff4-c16b299bc3e8",
+      "name": "Mathematics",
+      "constraints": {
+        "morning_tendency": "High",
+        "max_per_day": 2,
+        "min_per_day": 0,
+        "max_per_week": 5,
+        "min_per_week": 4,
+        "max_consecutive": 2,
+        "min_consecutive": 1
+      }
+    },
+    {
+      "id": "c2886b9f-62f7-44c8-9d54-909df238353c",
+      "name": "Data Structures",
+      "constraints": {
+        "morning_tendency": "High",
+        "max_per_day": 2,
+        "min_per_day": 0,
+        "max_per_week": 3,
+        "min_per_week": 2,
+        "max_consecutive": 2,
+        "min_consecutive": 1
+      }
+    },
+    {
+      "id": "0b3719a7-4001-4cc6-aba3-a6e8c9382569",
+      "name": "Technical Communication",
+      "constraints": {
+        "morning_tendency": "Low",
+        "max_per_day": 1,
+        "min_per_day": 0,
+        "max_per_week": 4,
+        "min_per_week": 3,
+        "max_consecutive": 1,
+        "min_consecutive": 1
+      }
+    },
+    {
+      "id": "cecabd0f-f1af-4676-8942-05f3b0a95d71",
+      "name": "Database Systems",
+      "constraints": {
+        "morning_tendency": "Med",
+        "max_per_day": 1,
+        "min_per_day": 0,
+        "max_per_week": 3,
+        "min_per_week": 2,
+        "max_consecutive": 1,
+        "min_consecutive": 1
+      }
+    },
+    {
+      "id": "ceead4b0-4095-4cf5-b645-4bc80116305e",
+      "name": "Operating Systems",
+      "constraints": {
+        "morning_tendency": "Med",
+        "max_per_day": 1,
+        "min_per_day": 0,
+        "max_per_week": 3,
+        "min_per_week": 2,
+        "max_consecutive": 1,
+        "min_consecutive": 1
+      }
+    },
+    {
+      "id": "747941c9-3ca6-4092-b8c8-3cc34ba121bc",
+      "name": "Algorithms",
+      "constraints": {
+        "morning_tendency": "High",
+        "max_per_day": 1,
+        "min_per_day": 0,
+        "max_per_week": 3,
+        "min_per_week": 2,
+        "max_consecutive": 1,
+        "min_consecutive": 1
+      }
+    },
+    {
+      "id": "1fe27831-75d3-419b-80f1-24f4cadf9987",
+      "name": "Programming Lab",
+      "constraints": {
+        "morning_tendency": "Low",
+        "max_per_day": 2,
+        "min_per_day": 0,
+        "max_per_week": 2,
+        "min_per_week": 2,
+        "max_consecutive": 2,
+        "min_consecutive": 2
+      }
+    },
+    {
+      "id": "18fb9e9f-b56e-4a2e-922b-476396eac6ac",
+      "name": "Systems Lab",
+      "constraints": {
+        "morning_tendency": "Low",
+        "max_per_day": 2,
+        "min_per_day": 0,
+        "max_per_week": 2,
+        "min_per_week": 2,
+        "max_consecutive": 2,
+        "min_consecutive": 2
+      }
+    },
+    {
+      "id": "78371da3-5f59-4bcb-a855-f8ec4c2eae6c",
+      "name": "Networks Lab",
+      "constraints": {
+        "morning_tendency": "Low",
+        "max_per_day": 2,
+        "min_per_day": 0,
+        "max_per_week": 2,
+        "min_per_week": 2,
+        "max_consecutive": 2,
+        "min_consecutive": 2
+      }
+    },
+    {
+      "id": "ac072d57-3e51-4cfe-9b02-fb0614f5e66d",
+      "name": "Hardware Lab",
+      "constraints": {
+        "morning_tendency": "Med",
+        "max_per_day": 2,
+        "min_per_day": 0,
+        "max_per_week": 2,
+        "min_per_week": 2,
+        "max_consecutive": 2,
+        "min_consecutive": 2
+      }
+    },
+    {
+      "id": "f479c2b0-7381-4ed7-8671-0e0ffdd56107",
+      "name": "AI Elective",
+      "constraints": {
+        "morning_tendency": "Low",
+        "max_per_day": 1,
+        "min_per_day": 0,
+        "max_per_week": 2,
+        "min_per_week": 2,
+        "max_consecutive": 1,
+        "min_consecutive": 1
+      }
+    },
+    {
+      "id": "bc9a1430-86ed-43e1-9ed0-f01876ff4d59",
+      "name": "Cloud Computing",
+      "constraints": {
+        "morning_tendency": "Low",
+        "max_per_day": 1,
+        "min_per_day": 0,
+        "max_per_week": 2,
+        "min_per_week": 2,
+        "max_consecutive": 1,
+        "min_consecutive": 1
+      }
+    },
+    {
+      "id": "5fe42cc7-2e9e-41c3-b430-d5e8644d75c6",
+      "name": "Cybersecurity",
+      "constraints": {
+        "morning_tendency": "Low",
+        "max_per_day": 1,
+        "min_per_day": 0,
+        "max_per_week": 2,
+        "min_per_week": 2,
+        "max_consecutive": 1,
+        "min_consecutive": 1
+      }
+    },
+    {
+      "id": "3517a61b-6353-4fea-b25a-2a3d64a8a701",
+      "name": "Robotics Minor",
+      "constraints": {
+        "morning_tendency": "Low",
+        "max_per_day": 1,
+        "min_per_day": 0,
+        "max_per_week": 2,
+        "min_per_week": 2,
+        "max_consecutive": 1,
+        "min_consecutive": 1
+      }
+    }
+  ],
+  "teacher_assignments": [
+    {
+      "id": "6ff4ccf1-ffa6-4979-b3b8-d62da4ea6fd5",
+      "class_id": "c51e5a5a-d01b-495b-a7f3-4b1f1760bf32",
+      "teacher_id": "500d8d43-3de6-43a0-a521-7dc995a901bc",
+      "subject_id": "747941c9-3ca6-4092-b8c8-3cc34ba121bc",
+      "target_room_id": "8d567621-2e6d-4d11-8bb6-99f68d2fb076",
+      "tag": "Merged",
+      "constraints": {
+        "period_length": 1,
+        "first_slot_days": null,
+        "co_schedule_with": [
+          "d7360442-afa6-4c07-9175-559e1de535e5"
+        ]
+      }
+    },
+    {
+      "id": "d7360442-afa6-4c07-9175-559e1de535e5",
+      "class_id": "e0e64d69-aa75-44d9-8326-9c436694ea46",
+      "teacher_id": "500d8d43-3de6-43a0-a521-7dc995a901bc",
+      "subject_id": "747941c9-3ca6-4092-b8c8-3cc34ba121bc",
+      "target_room_id": "8d567621-2e6d-4d11-8bb6-99f68d2fb076",
+      "tag": "Merged",
+      "constraints": {
+        "period_length": 1,
+        "first_slot_days": null,
+        "co_schedule_with": [
+          "6ff4ccf1-ffa6-4979-b3b8-d62da4ea6fd5"
+        ]
+      }
+    },
+    {
+      "id": "6cf4231b-e968-4fae-99c5-4c117e808aec",
+      "class_id": "c51e5a5a-d01b-495b-a7f3-4b1f1760bf32",
+      "teacher_id": "5295f07a-cd96-42b8-9f9c-c53775efb314",
+      "subject_id": "1fe27831-75d3-419b-80f1-24f4cadf9987",
+      "target_room_id": "1ee8c4ea-2b97-45f8-b891-d1d16d542f0f",
+      "tag": "Batch A",
+      "constraints": {
+        "period_length": 2,
+        "first_slot_days": null,
+        "co_schedule_with": [
+          "a3371f88-f0ef-4439-9176-4a1a3e38ed81"
+        ]
+      }
+    },
+    {
+      "id": "a3371f88-f0ef-4439-9176-4a1a3e38ed81",
+      "class_id": "c51e5a5a-d01b-495b-a7f3-4b1f1760bf32",
+      "teacher_id": "d7a17c99-562d-40a4-ae36-153bf2f4656b",
+      "subject_id": "18fb9e9f-b56e-4a2e-922b-476396eac6ac",
+      "target_room_id": "ad18710a-2208-4e4d-83be-7b41bc676dba",
+      "tag": "Batch B",
+      "constraints": {
+        "period_length": 2,
+        "first_slot_days": null,
+        "co_schedule_with": [
+          "6cf4231b-e968-4fae-99c5-4c117e808aec"
+        ]
+      }
+    },
+    {
+      "id": "4f072a60-cd1d-4c63-9f6e-6d08db5e5b2d",
+      "class_id": "e0e64d69-aa75-44d9-8326-9c436694ea46",
+      "teacher_id": "5295f07a-cd96-42b8-9f9c-c53775efb314",
+      "subject_id": "1fe27831-75d3-419b-80f1-24f4cadf9987",
+      "target_room_id": "1ee8c4ea-2b97-45f8-b891-d1d16d542f0f",
+      "tag": "Batch A",
+      "constraints": {
+        "period_length": 2,
+        "first_slot_days": null,
+        "co_schedule_with": [
+          "f59018c6-0ef4-4f21-99e7-5dc31a8addd2"
+        ]
+      }
+    },
+    {
+      "id": "f59018c6-0ef4-4f21-99e7-5dc31a8addd2",
+      "class_id": "e0e64d69-aa75-44d9-8326-9c436694ea46",
+      "teacher_id": "af3b2202-33f9-4654-944a-060b2847c755",
+      "subject_id": "18fb9e9f-b56e-4a2e-922b-476396eac6ac",
+      "target_room_id": "ad18710a-2208-4e4d-83be-7b41bc676dba",
+      "tag": "Batch B",
+      "constraints": {
+        "period_length": 2,
+        "first_slot_days": null,
+        "co_schedule_with": [
+          "4f072a60-cd1d-4c63-9f6e-6d08db5e5b2d"
+        ]
+      }
+    },
+    {
+      "id": "afb00a82-76cd-48b2-8136-f233b4610126",
+      "class_id": "4ff63876-b4fa-4a53-a526-41ff2ecb031b",
+      "teacher_id": "5295f07a-cd96-42b8-9f9c-c53775efb314",
+      "subject_id": "1fe27831-75d3-419b-80f1-24f4cadf9987",
+      "target_room_id": "1ee8c4ea-2b97-45f8-b891-d1d16d542f0f",
+      "tag": "Batch A",
+      "constraints": {
+        "period_length": 2,
+        "first_slot_days": null,
+        "co_schedule_with": [
+          "0655bd39-330a-4ec7-a1cf-ab6235afab00"
+        ]
+      }
+    },
+    {
+      "id": "0655bd39-330a-4ec7-a1cf-ab6235afab00",
+      "class_id": "4ff63876-b4fa-4a53-a526-41ff2ecb031b",
+      "teacher_id": "d7a17c99-562d-40a4-ae36-153bf2f4656b",
+      "subject_id": "18fb9e9f-b56e-4a2e-922b-476396eac6ac",
+      "target_room_id": "ad18710a-2208-4e4d-83be-7b41bc676dba",
+      "tag": "Batch B",
+      "constraints": {
+        "period_length": 2,
+        "first_slot_days": null,
+        "co_schedule_with": [
+          "afb00a82-76cd-48b2-8136-f233b4610126"
+        ]
+      }
+    },
+    {
+      "id": "4edbfc8f-2153-47c1-a04f-1181d61f5fea",
+      "class_id": "c51e5a5a-d01b-495b-a7f3-4b1f1760bf32",
+      "teacher_id": "205dc1ab-cf19-4905-9006-dfda87042fde",
+      "subject_id": "f479c2b0-7381-4ed7-8671-0e0ffdd56107",
+      "target_room_id": "5e549c4a-5b43-424a-bca2-ab2caee26f03",
+      "tag": "Track A",
+      "constraints": {
+        "period_length": 1,
+        "first_slot_days": null,
+        "co_schedule_with": [
+          "77699263-b8f7-4fc4-af07-547f3896a5e9"
+        ]
+      }
+    },
+    {
+      "id": "77699263-b8f7-4fc4-af07-547f3896a5e9",
+      "class_id": "c51e5a5a-d01b-495b-a7f3-4b1f1760bf32",
+      "teacher_id": "5295f07a-cd96-42b8-9f9c-c53775efb314",
+      "subject_id": "bc9a1430-86ed-43e1-9ed0-f01876ff4d59",
+      "target_room_id": "8d567621-2e6d-4d11-8bb6-99f68d2fb076",
+      "tag": "Track B",
+      "constraints": {
+        "period_length": 1,
+        "first_slot_days": null,
+        "co_schedule_with": [
+          "4edbfc8f-2153-47c1-a04f-1181d61f5fea"
+        ]
+      }
+    },
+    {
+      "id": "d976b648-400b-40ca-b96c-1185ec9d0a7c",
+      "class_id": "4ff63876-b4fa-4a53-a526-41ff2ecb031b",
+      "teacher_id": "727979be-5166-4e24-924d-d8321095bdf8",
+      "subject_id": "f479c2b0-7381-4ed7-8671-0e0ffdd56107",
+      "target_room_id": "5e549c4a-5b43-424a-bca2-ab2caee26f03",
+      "tag": "Track A",
+      "constraints": {
+        "period_length": 1,
+        "first_slot_days": null,
+        "co_schedule_with": [
+          "f554e5ba-1001-42c5-8517-7fab373a554b"
+        ]
+      }
+    },
+    {
+      "id": "f554e5ba-1001-42c5-8517-7fab373a554b",
+      "class_id": "4ff63876-b4fa-4a53-a526-41ff2ecb031b",
+      "teacher_id": "5295f07a-cd96-42b8-9f9c-c53775efb314",
+      "subject_id": "bc9a1430-86ed-43e1-9ed0-f01876ff4d59",
+      "target_room_id": "8d567621-2e6d-4d11-8bb6-99f68d2fb076",
+      "tag": "Track B",
+      "constraints": {
+        "period_length": 1,
+        "first_slot_days": null,
+        "co_schedule_with": [
+          "d976b648-400b-40ca-b96c-1185ec9d0a7c"
+        ]
+      }
+    },
+    {
+      "id": "d7bb636d-3f20-4863-aa25-72eea17ac551",
+      "class_id": "c51e5a5a-d01b-495b-a7f3-4b1f1760bf32",
+      "teacher_id": "500d8d43-3de6-43a0-a521-7dc995a901bc",
+      "subject_id": "0b3719a7-4001-4cc6-aba3-a6e8c9382569",
+      "target_room_id": null,
+      "tag": null,
+      "constraints": {
+        "period_length": 1,
+        "first_slot_days": null,
+        "co_schedule_with": []
+      }
+    },
+    {
+      "id": "433104d0-b058-4167-b3c7-9c73a0e2b7f3",
+      "class_id": "c51e5a5a-d01b-495b-a7f3-4b1f1760bf32",
+      "teacher_id": "c00aa55a-208a-4754-8bd6-fcd408c17296",
+      "subject_id": "ceead4b0-4095-4cf5-b645-4bc80116305e",
+      "target_room_id": null,
+      "tag": null,
+      "constraints": {
+        "period_length": 1,
+        "first_slot_days": null,
+        "co_schedule_with": []
+      }
+    },
+    {
+      "id": "78ef6285-d8c0-47c7-aecc-dbc4a71b777c",
+      "class_id": "c51e5a5a-d01b-495b-a7f3-4b1f1760bf32",
+      "teacher_id": "d7a17c99-562d-40a4-ae36-153bf2f4656b",
+      "subject_id": "dac2ed14-5617-4632-a6a2-2542d9b6f690",
+      "target_room_id": null,
+      "tag": null,
+      "constraints": {
+        "period_length": 1,
+        "first_slot_days": null,
+        "co_schedule_with": []
+      }
+    },
+    {
+      "id": "a1cf94df-cb3b-480d-be4a-4d2faf1893a2",
+      "class_id": "c51e5a5a-d01b-495b-a7f3-4b1f1760bf32",
+      "teacher_id": "42029267-78cb-4360-bf37-e00eae46d3c8",
+      "subject_id": "dab6b553-8dd3-4c34-bf28-0a4191773e21",
+      "target_room_id": null,
+      "tag": null,
+      "constraints": {
+        "period_length": 1,
+        "first_slot_days": null,
+        "co_schedule_with": []
+      }
+    },
+    {
+      "id": "c891fdd3-f7ab-4fdf-ac00-7cc766c1c254",
+      "class_id": "c51e5a5a-d01b-495b-a7f3-4b1f1760bf32",
+      "teacher_id": "7582c61d-907f-4f67-8f23-9f0a927c9d53",
+      "subject_id": "cecabd0f-f1af-4676-8942-05f3b0a95d71",
+      "target_room_id": null,
+      "tag": null,
+      "constraints": {
+        "period_length": 1,
+        "first_slot_days": null,
+        "co_schedule_with": []
+      }
+    },
+    {
+      "id": "3a5d5302-f132-46d2-8222-755372a9b224",
+      "class_id": "c51e5a5a-d01b-495b-a7f3-4b1f1760bf32",
+      "teacher_id": "c00aa55a-208a-4754-8bd6-fcd408c17296",
+      "subject_id": "c2886b9f-62f7-44c8-9d54-909df238353c",
+      "target_room_id": null,
+      "tag": null,
+      "constraints": {
+        "period_length": 1,
+        "first_slot_days": [
+          "Thu"
+        ],
+        "co_schedule_with": []
+      }
+    },
+    {
+      "id": "2b233bfc-4ebb-4ca4-85ce-09165bfc1969",
+      "class_id": "c51e5a5a-d01b-495b-a7f3-4b1f1760bf32",
+      "teacher_id": "205dc1ab-cf19-4905-9006-dfda87042fde",
+      "subject_id": "ea55a017-6b54-4bc7-bff4-c16b299bc3e8",
+      "target_room_id": null,
+      "tag": null,
+      "constraints": {
+        "period_length": 1,
+        "first_slot_days": null,
+        "co_schedule_with": []
+      }
+    },
+    {
+      "id": "966ca8b8-a5d7-419c-96b2-019962d4d3da",
+      "class_id": "e0e64d69-aa75-44d9-8326-9c436694ea46",
+      "teacher_id": "7582c61d-907f-4f67-8f23-9f0a927c9d53",
+      "subject_id": "cecabd0f-f1af-4676-8942-05f3b0a95d71",
+      "target_room_id": null,
+      "tag": null,
+      "constraints": {
+        "period_length": 1,
+        "first_slot_days": null,
+        "co_schedule_with": []
+      }
+    },
+    {
+      "id": "1d7cb554-732f-4247-a2e7-5c4c10621e25",
+      "class_id": "e0e64d69-aa75-44d9-8326-9c436694ea46",
+      "teacher_id": "c00aa55a-208a-4754-8bd6-fcd408c17296",
+      "subject_id": "c2886b9f-62f7-44c8-9d54-909df238353c",
+      "target_room_id": null,
+      "tag": null,
+      "constraints": {
+        "period_length": 1,
+        "first_slot_days": null,
+        "co_schedule_with": []
+      }
+    },
+    {
+      "id": "f9231ca9-57c6-46b4-9daa-993310ee4463",
+      "class_id": "e0e64d69-aa75-44d9-8326-9c436694ea46",
+      "teacher_id": "500d8d43-3de6-43a0-a521-7dc995a901bc",
+      "subject_id": "0b3719a7-4001-4cc6-aba3-a6e8c9382569",
+      "target_room_id": null,
+      "tag": null,
+      "constraints": {
+        "period_length": 1,
+        "first_slot_days": null,
+        "co_schedule_with": []
+      }
+    },
+    {
+      "id": "fdd79616-d917-4aa3-82d6-aac5d1c47f15",
+      "class_id": "e0e64d69-aa75-44d9-8326-9c436694ea46",
+      "teacher_id": "42029267-78cb-4360-bf37-e00eae46d3c8",
+      "subject_id": "dab6b553-8dd3-4c34-bf28-0a4191773e21",
+      "target_room_id": null,
+      "tag": null,
+      "constraints": {
+        "period_length": 1,
+        "first_slot_days": null,
+        "co_schedule_with": []
+      }
+    },
+    {
+      "id": "3063612c-fd5d-4211-b3b2-964fe394e205",
+      "class_id": "e0e64d69-aa75-44d9-8326-9c436694ea46",
+      "teacher_id": "af3b2202-33f9-4654-944a-060b2847c755",
+      "subject_id": "ceead4b0-4095-4cf5-b645-4bc80116305e",
+      "target_room_id": null,
+      "tag": null,
+      "constraints": {
+        "period_length": 1,
+        "first_slot_days": null,
+        "co_schedule_with": []
+      }
+    },
+    {
+      "id": "e1285370-7cef-4551-98fd-6fa7a0a89e65",
+      "class_id": "e0e64d69-aa75-44d9-8326-9c436694ea46",
+      "teacher_id": "d7a17c99-562d-40a4-ae36-153bf2f4656b",
+      "subject_id": "dac2ed14-5617-4632-a6a2-2542d9b6f690",
+      "target_room_id": null,
+      "tag": null,
+      "constraints": {
+        "period_length": 1,
+        "first_slot_days": null,
+        "co_schedule_with": []
+      }
+    },
+    {
+      "id": "c9d94072-15f9-4745-9c8b-f45ae5c48869",
+      "class_id": "e0e64d69-aa75-44d9-8326-9c436694ea46",
+      "teacher_id": "42029267-78cb-4360-bf37-e00eae46d3c8",
+      "subject_id": "ea55a017-6b54-4bc7-bff4-c16b299bc3e8",
+      "target_room_id": null,
+      "tag": null,
+      "constraints": {
+        "period_length": 1,
+        "first_slot_days": null,
+        "co_schedule_with": []
+      }
+    },
+    {
+      "id": "306a9c15-9de8-421e-8cdb-d2bb94b98530",
+      "class_id": "4ff63876-b4fa-4a53-a526-41ff2ecb031b",
+      "teacher_id": "7582c61d-907f-4f67-8f23-9f0a927c9d53",
+      "subject_id": "cecabd0f-f1af-4676-8942-05f3b0a95d71",
+      "target_room_id": null,
+      "tag": null,
+      "constraints": {
+        "period_length": 1,
+        "first_slot_days": null,
+        "co_schedule_with": []
+      }
+    },
+    {
+      "id": "3f61ffa4-7831-4cec-b204-27ba994cb93e",
+      "class_id": "4ff63876-b4fa-4a53-a526-41ff2ecb031b",
+      "teacher_id": "500d8d43-3de6-43a0-a521-7dc995a901bc",
+      "subject_id": "0b3719a7-4001-4cc6-aba3-a6e8c9382569",
+      "target_room_id": null,
+      "tag": null,
+      "constraints": {
+        "period_length": 1,
+        "first_slot_days": null,
+        "co_schedule_with": []
+      }
+    },
+    {
+      "id": "6ec56405-5c39-447a-8140-e4a602c52b49",
+      "class_id": "4ff63876-b4fa-4a53-a526-41ff2ecb031b",
+      "teacher_id": "c00aa55a-208a-4754-8bd6-fcd408c17296",
+      "subject_id": "dab6b553-8dd3-4c34-bf28-0a4191773e21",
+      "target_room_id": null,
+      "tag": null,
+      "constraints": {
+        "period_length": 1,
+        "first_slot_days": null,
+        "co_schedule_with": []
+      }
+    },
+    {
+      "id": "4ee5ef79-d5f5-41bc-ac71-20ddb8739361",
+      "class_id": "4ff63876-b4fa-4a53-a526-41ff2ecb031b",
+      "teacher_id": "c00aa55a-208a-4754-8bd6-fcd408c17296",
+      "subject_id": "c2886b9f-62f7-44c8-9d54-909df238353c",
+      "target_room_id": null,
+      "tag": null,
+      "constraints": {
+        "period_length": 1,
+        "first_slot_days": null,
+        "co_schedule_with": []
+      }
+    },
+    {
+      "id": "9728f6b6-ccd8-49df-bdd2-ed441b3e2ba6",
+      "class_id": "4ff63876-b4fa-4a53-a526-41ff2ecb031b",
+      "teacher_id": "205dc1ab-cf19-4905-9006-dfda87042fde",
+      "subject_id": "ea55a017-6b54-4bc7-bff4-c16b299bc3e8",
+      "target_room_id": null,
+      "tag": null,
+      "constraints": {
+        "period_length": 1,
+        "first_slot_days": null,
+        "co_schedule_with": []
+      }
+    },
+    {
+      "id": "28eea3cb-41c3-433a-99ac-503f5f01b791",
+      "class_id": "4ff63876-b4fa-4a53-a526-41ff2ecb031b",
+      "teacher_id": "d7a17c99-562d-40a4-ae36-153bf2f4656b",
+      "subject_id": "dac2ed14-5617-4632-a6a2-2542d9b6f690",
+      "target_room_id": null,
+      "tag": null,
+      "constraints": {
+        "period_length": 1,
+        "first_slot_days": null,
+        "co_schedule_with": []
+      }
+    },
+    {
+      "id": "61363b40-2e94-4ca6-b3d3-12a913846829",
+      "class_id": "4ff63876-b4fa-4a53-a526-41ff2ecb031b",
+      "teacher_id": "af3b2202-33f9-4654-944a-060b2847c755",
+      "subject_id": "ceead4b0-4095-4cf5-b645-4bc80116305e",
+      "target_room_id": null,
+      "tag": null,
+      "constraints": {
+        "period_length": 1,
+        "first_slot_days": null,
+        "co_schedule_with": []
+      }
+    }
+  ]
+}
