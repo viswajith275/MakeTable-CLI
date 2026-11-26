@@ -209,6 +209,7 @@ class FormScreen(ModalScreen[dict[str, Any] | None]):
             self._submit()
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
+        event.stop()
         self._submit()
 
     def action_cancel(self) -> None:
@@ -337,6 +338,7 @@ class PromptScreen(ModalScreen[str | None]):
             self.dismiss(None)
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
+        event.stop()
         self.dismiss(event.value.strip())
 
     def action_cancel(self) -> None:
@@ -859,6 +861,8 @@ class TimetableApp(App):
                     if it.id == existing_id:
                         items[idx] = test_entity
                         break
+            if kind == "assignment":
+                self._sync_co_schedule_links(snapshot.teacher_assignments, test_entity)
             TimeTableGenerationInput.model_validate(snapshot.model_dump())
         except ValidationError as err:
             return format_error(err)
@@ -1147,7 +1151,7 @@ class TimetableApp(App):
                     co_schedule_with=co_ids,
                     first_slot_days=[
                         WeekDay(day) for day in values.get("first_slot_days") or []
-                    ],
+                    ] or None,
                 ),
             )
         raise ValueError(f"unknown entity: {kind}")
@@ -1166,6 +1170,25 @@ class TimetableApp(App):
             ),
             None,
         )
+
+    @staticmethod
+    def _sync_co_schedule_links(
+        assignments: list[TeacherAssignmentInput],
+        saved: TeacherAssignmentInput,
+    ) -> None:
+        """Keep co_schedule_with links symmetric across linked assignments."""
+        linked = set(saved.constraints.co_schedule_with)
+        for other in assignments:
+            if other.id == saved.id:
+                continue
+            current = other.constraints.co_schedule_with
+            if other.id in linked:
+                if saved.id not in current:
+                    current.append(saved.id)
+            elif saved.id in current:
+                other.constraints.co_schedule_with = [
+                    uid for uid in current if uid != saved.id
+                ]
 
     def _drop_assignment_references(self, removed_ids: set[UUID]) -> None:
         """Remove co-schedule links to assignments that are being deleted."""
@@ -1257,12 +1280,15 @@ class TimetableApp(App):
             items = getattr(self.data, PLURALS[kind])
             if existing is None:
                 items.append(entity)
-                return
-            for index, item in enumerate(items):
-                if item.id == existing.id:
-                    items[index] = entity
-                    return
-            items.append(entity)
+            else:
+                for index, item in enumerate(items):
+                    if item.id == existing.id:
+                        items[index] = entity
+                        break
+                else:
+                    items.append(entity)
+            if kind == "assignment":
+                self._sync_co_schedule_links(self.data.teacher_assignments, entity)
 
         self._commit(mutate)
 
@@ -1783,7 +1809,8 @@ class TimetableApp(App):
 
         teacher_capacity = sum(t.constraints.max_per_week for t in self.data.teachers)
 
-        status_text = "[green]Feasible[/green]" if required_periods <= total_student_slots else "[red]Over-allocated[/red]"
+        per_class_feasible = all(req <= total_slots for req in req_by_class.values())
+        status_text = "[green]Feasible[/green]" if per_class_feasible else "[red]Over-allocated[/red]"
         feasibility = (
             f"[bold]Workload & Capacity Analysis:[/bold]\n"
             f"• Total Class Slot Capacity: [bold]{total_student_slots}[/bold] periods\n"
@@ -2057,8 +2084,9 @@ class TimetableApp(App):
                             parts = []
                             for e in entries:
                                 tag_badge = f" [{e.tag}]" if e.tag else ""
-                                parts.append(f"{e.class_name}{tag_badge}: {e.subject_name} ({e.teacher_name})")
-                            row.append("\n".join(parts))
+                                dur = f" [{e.period_length}h]" if e.period_length > 1 else ""
+                                parts.append(f"{e.class_name}{tag_badge}: {e.subject_name}{dur} ({e.teacher_name})")
+                            row.append("\n---\n".join(parts))
                         elif s in breaks_set:
                             row.append("[dim italic]BREAK[/dim italic]")
                         else:

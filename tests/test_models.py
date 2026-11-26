@@ -335,6 +335,38 @@ class ProjectCrossReferenceTests(unittest.TestCase):
         reqs = class_weekly_requirements(data.teacher_assignments, data.subjects)
         self.assertEqual(reqs[data.classes[0].id], 4)
 
+    def test_shared_subject_across_teachers_not_double_counted_in_requirements(self):
+        data = _make_base_project()
+        # Base project has 6*3 = 18 weekly slots; Math min_per_week=3 -> raise to 12.
+        data.subjects[0].constraints.max_per_day = 4
+        data.subjects[0].constraints.max_per_week = 12
+        data.subjects[0].constraints.min_per_week = 12
+        t2 = TeacherInput(
+            name="Mr. Gauss",
+            constraints=TeacherConstraints(max_per_day=4, max_per_week=15, max_consecutive=2),
+        )
+        data.teachers.append(t2)
+        data.teacher_assignments.append(
+            TeacherAssignmentInput(
+                class_id=data.classes[0].id,
+                teacher_id=t2.id,
+                subject_id=data.subjects[0].id,
+            )
+        )
+        # Two unlinked teachers sharing Math (min_per_week=12) still requires 12 slots total, not 24.
+        validated = TimeTableGenerationInput.model_validate(data.model_dump())
+        reqs = class_weekly_requirements(validated.teacher_assignments, validated.subjects)
+        self.assertEqual(reqs[data.classes[0].id], 12)
+
+    def test_first_slot_days_rejects_multi_period_block_crossing_break(self):
+        data = _make_base_project()
+        data.project.break_slots = [2]
+        data.teacher_assignments[0].constraints.period_length = 2
+        data.teacher_assignments[0].constraints.first_slot_days = [WeekDay.Mon]
+        with self.assertRaises(ValidationError) as ctx:
+            TimeTableGenerationInput.model_validate(data.model_dump())
+        self.assertIn("crosses a project break slot", str(ctx.exception))
+
     def test_validate_project_all_input_types(self):
         data = _make_base_project()
         json_str = data.model_dump_json()

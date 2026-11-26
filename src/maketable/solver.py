@@ -281,7 +281,7 @@ class TimeTableGenerator:
             # anything that has no matching variable instead of crashing.
             if day is None or day not in self.days:
                 continue
-            if not 0 <= slot < self.slots:
+            if not 0 <= slot < self.slots or slot in self.break_slot_indices:
                 continue
 
             var = self.assignment_schedule.get(entry.assignment_id, {}).get(day, {}).get(slot)

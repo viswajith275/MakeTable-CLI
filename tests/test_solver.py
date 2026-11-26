@@ -243,6 +243,23 @@ class SolverConstraintTests(unittest.TestCase):
         self.assertTrue(re_solved.success)
         self.assertEqual(len(re_solved.entries), len(first.entries))
 
+    def test_hint_pointing_to_new_break_slot_is_ignored(self):
+        data = _solver_fixture()
+        first = generate(data, time_limit_sec=3, workers=1, seed=42)
+        self.assertTrue(first.success)
+
+        # Turn one of the hinted slots into a break slot and re-solve with the old hint
+        hinted_slot = first.entries[0].slot
+        data.project.break_slots = [hinted_slot]
+        data.teachers[0].constraints.max_per_week = 9
+        data.subjects[0].constraints.min_per_week = 3
+        data.subjects[0].constraints.max_per_week = 3
+        re_solved = TimeTableGenerator(RawData=data, HintData=first).solve(
+            time_limit_sec=3, workers=1, seed=42
+        )
+        self.assertTrue(re_solved.success)
+        self.assertFalse(any(e.slot == hinted_slot for e in re_solved.entries))
+
 
 if __name__ == "__main__":
     unittest.main()

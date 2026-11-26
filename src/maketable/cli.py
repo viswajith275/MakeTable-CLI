@@ -113,7 +113,11 @@ def _print_entries_table(response: GeneratedResponse, target: Console = console)
     }
 
     all_days = sorted({e.day for e in response.entries}, key=lambda d: day_order[d.value])
-    all_slots = sorted(set(e.slot for e in response.entries) | set(response.break_slots))
+    max_slot = max(
+        max((e.slot for e in response.entries), default=0),
+        max(response.break_slots, default=0),
+    )
+    all_slots = list(range(1, max_slot + 1))
     break_slots_set = set(response.break_slots)
 
     for class_name in sorted(by_class.keys()):

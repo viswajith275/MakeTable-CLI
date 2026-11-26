@@ -325,7 +325,7 @@ def class_weekly_requirements(
     teacher_assignments: List["TeacherAssignmentInput"],
     subjects: List["SubjectInput"],
 ) -> Dict[UUID, int]:
-    """Return minimum weekly slots required per class, counting co-scheduled tracks once."""
+    """Return minimum weekly slots required per class, counting shared subjects and co-scheduled tracks once."""
     subjects_by_id = {s.id: s for s in subjects}
     roots = _co_schedule_roots(teacher_assignments)
     class_groups: dict[UUID, dict[UUID, list[TeacherAssignmentInput]]] = collections.defaultdict(
@@ -334,20 +334,37 @@ def class_weekly_requirements(
     for assignment in teacher_assignments:
         class_groups[assignment.class_id][roots[assignment.id]].append(assignment)
 
-    return {
-        class_id: sum(
-            max(
-                (
-                    subjects_by_id[a.subject_id].constraints.min_per_week
-                    for a in group_assignments
-                    if a.subject_id in subjects_by_id
-                ),
-                default=0,
-            )
-            for group_assignments in groups.values()
-        )
-        for class_id, groups in class_groups.items()
-    }
+    requirements: Dict[UUID, int] = {}
+    for class_id, groups in class_groups.items():
+        # Split-batch co-scheduled tracks (multiple assignments in the same class sharing
+        # a co-schedule root) share time slots, while ungrouped assignments for the same
+        # subject in the same class share a single subject min_per_week requirement.
+        total = 0
+        counted_subjects: set[UUID] = set()
+        single_subjects: set[UUID] = set()
+
+        for group_assignments in groups.values():
+            if len(group_assignments) > 1:
+                total += max(
+                    (
+                        subjects_by_id[a.subject_id].constraints.min_per_week
+                        for a in group_assignments
+                        if a.subject_id in subjects_by_id
+                    ),
+                    default=0,
+                )
+                for a in group_assignments:
+                    counted_subjects.add(a.subject_id)
+            else:
+                single_subjects.add(group_assignments[0].subject_id)
+
+        for sub_id in single_subjects - counted_subjects:
+            if sub_id in subjects_by_id:
+                total += subjects_by_id[sub_id].constraints.min_per_week
+
+        requirements[class_id] = total
+
+    return requirements
 
 
 class TimeTableGenerationInput(BaseModel):
@@ -492,9 +509,10 @@ class TimeTableGenerationInput(BaseModel):
                     f"assignment period_length ({period_length}) "
                     f"exceeds project slots ({self.project.slots})"
                 )
-            if not valid_block_starts(
+            starts_for_len = valid_block_starts(
                 self.project.slots, self.project.break_slots, period_length
-            ):
+            )
+            if not starts_for_len:
                 raise ValueError(
                     f"assignment period_length ({period_length}) does not fit "
                     f"between the project's break slots "
@@ -539,6 +557,11 @@ class TimeTableGenerationInput(BaseModel):
                     raise ValueError(
                         "teacher assignment requires the first slot, "
                         "but slot 1 is a project break slot"
+                    )
+                if 0 not in starts_for_len:
+                    raise ValueError(
+                        f"teacher assignment requires the first slot with period_length "
+                        f"({period_length}), which crosses a project break slot"
                     )
 
         roots = _co_schedule_roots(self.teacher_assignments)

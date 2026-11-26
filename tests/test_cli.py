@@ -176,6 +176,43 @@ class CliCommandTests(unittest.TestCase):
         tui_res = self.runner.invoke(app, ["tui"])
         self.assertEqual(tui_res.exit_code, 1)
 
+    def test_print_entries_table_keeps_intermediate_empty_slots(self):
+        from uuid import uuid4
+        from rich.console import Console
+        from maketable.cli import _print_entries_table
+        from maketable.models import TimeTableEntryOutput, WeekDay
+
+        resp = GeneratedResponse(
+            success=True,
+            violations=[],
+            entries=[
+                TimeTableEntryOutput(
+                    assignment_id=uuid4(),
+                    class_name="C1",
+                    room_name="R1",
+                    subject_name="Math",
+                    teacher_name="T1",
+                    day=WeekDay.Mon,
+                    slot=1,
+                ),
+                TimeTableEntryOutput(
+                    assignment_id=uuid4(),
+                    class_name="C1",
+                    room_name="R1",
+                    subject_name="Science",
+                    teacher_name="T1",
+                    day=WeekDay.Mon,
+                    slot=3,
+                ),
+            ],
+        )
+        rec = Console(record=True, width=120)
+        _print_entries_table(resp, rec)
+        rendered = _plain(rec.export_text())
+        self.assertIn("Slot 1", rendered)
+        self.assertIn("Slot 2", rendered)
+        self.assertIn("Slot 3", rendered)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -3,9 +3,22 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from textual.widgets import DataTable, Input, Select
+from textual.widgets import DataTable, Input, Select, Static
 
-from maketable import generate
+from maketable import (
+    ClassInput,
+    ProjectInput,
+    RoomConstraints,
+    RoomInput,
+    SubjectConstraints,
+    SubjectInput,
+    TeacherAssignmentInput,
+    TeacherConstraints,
+    TeacherInput,
+    TimeTableGenerationInput,
+    WeekDay,
+    generate,
+)
 from maketable.tui import ConfirmScreen, FormScreen, HelpScreen, TimetableApp
 
 
@@ -133,6 +146,71 @@ class TuiWorkflowTests(unittest.IsolatedAsyncioTestCase):
             await pilot.click("#ok")
             await pilot.pause()
             self.assertEqual(app.data.rooms, [])
+
+    async def test_co_schedule_symmetry_and_per_class_feasibility(self):
+        hall = RoomInput(name="Hall", constraints=RoomConstraints(capacity=2))
+        c1 = ClassInput(name="C1", room_id=hall.id)
+        c2 = ClassInput(name="C2", room_id=hall.id)
+        t1 = TeacherInput(
+            name="T1",
+            constraints=TeacherConstraints(max_per_day=4, max_per_week=8, max_consecutive=2),
+        )
+        s1 = SubjectInput(
+            name="Math",
+            constraints=SubjectConstraints(max_per_day=4, max_per_week=4, min_per_week=4),
+        )
+        a1 = TeacherAssignmentInput(class_id=c1.id, teacher_id=t1.id, subject_id=s1.id)
+        a2 = TeacherAssignmentInput(class_id=c2.id, teacher_id=t1.id, subject_id=s1.id)
+        data = TimeTableGenerationInput(
+            project=ProjectInput(slots=4, days=[WeekDay.Mon, WeekDay.Tue]),
+            rooms=[hall],
+            classes=[c1, c2],
+            teachers=[t1],
+            subjects=[s1],
+            teacher_assignments=[a1, a2],
+        )
+
+        app = TimetableApp()
+        async with app.run_test() as pilot:
+            app.data = data
+            app._refresh_all()
+            await pilot.pause()
+
+            # Linking a1 -> a2 via form also updates a2 -> a1 symmetrically
+            vals = app._values("assignment", a1)
+            vals["co_schedule_with"] = [str(a2.id)]
+            app._apply_form("assignment", vals, a1)
+            await pilot.pause()
+            self.assertEqual(a2.constraints.co_schedule_with, [a1.id])
+            self.assertIsNone(app.data.teacher_assignments[0].constraints.first_slot_days)
+
+            # Unlinking from a2's side clears a1's link as well
+            vals2 = app._values("assignment", a2)
+            self.assertEqual(vals2["co_schedule_with"], [str(a1.id)])
+            vals2["co_schedule_with"] = []
+            app._apply_form("assignment", vals2, a2)
+            await pilot.pause()
+            self.assertEqual(app.data.teacher_assignments[0].constraints.co_schedule_with, [])
+
+            # Per-class feasibility flags Over-allocated if one class exceeds total_slots
+            # even when total_student_slots across all classes is larger.
+            s2 = SubjectInput(
+                name="Physics",
+                constraints=SubjectConstraints(max_per_day=4, max_per_week=6, min_per_week=6),
+            )
+            t2 = TeacherInput(
+                name="T2",
+                constraints=TeacherConstraints(max_per_day=4, max_per_week=8, max_consecutive=2),
+            )
+            app.data.subjects.append(s2)
+            app.data.teachers.append(t2)
+            app.data.teacher_assignments.append(
+                TeacherAssignmentInput(class_id=c1.id, teacher_id=t2.id, subject_id=s2.id)
+            )
+            app._refresh_project()
+            await pilot.pause()
+            feas = str(app.query_one("#project-feasibility", Static).content)
+            self.assertIn("Over-allocated", feas)
 
 
 if __name__ == "__main__":
