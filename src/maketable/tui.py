@@ -202,6 +202,7 @@ class FormScreen(ModalScreen[dict[str, Any] | None]):
             break
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
+        event.stop()
         if event.button.id == "cancel":
             self.dismiss(None)
         elif event.button.id == "save":
@@ -276,6 +277,7 @@ class ConfirmScreen(ModalScreen[bool]):
                 yield Button(self.confirm_label, id="ok", variant=self.variant, compact=True)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
+        event.stop()
         self.dismiss(event.button.id == "ok")
 
     def action_cancel(self) -> None:
@@ -299,6 +301,7 @@ class MessageScreen(ModalScreen[None]):
                 yield Button("Close", id="close", variant="primary", compact=True)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
+        event.stop()
         self.dismiss(None)
 
     def action_close(self) -> None:
@@ -327,6 +330,7 @@ class PromptScreen(ModalScreen[str | None]):
         self.query_one("#prompt-input", Input).focus()
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
+        event.stop()
         if event.button.id == "ok":
             self.dismiss(self.query_one("#prompt-input", Input).value.strip())
         else:
@@ -380,6 +384,7 @@ class HelpScreen(ModalScreen[None]):
                 yield Button("Close", id="close", variant="primary", compact=True)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
+        event.stop()
         self.dismiss(None)
 
     def action_close(self) -> None:
