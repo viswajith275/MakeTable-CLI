@@ -22,7 +22,9 @@ uv sync
 # without it the payload is stored uncompressed and the binary is much larger.
 # --include-package-data=textual is not used: the only data files Textual ships
 # are tree-sitter grammars for its optional "syntax" extra, which this app
-# never installs. OR-Tools data is required because it holds the .libs dylibs.
+# never installs. --include-package-data=ortools is also omitted because Nuitka's
+# built-in ortools package config already bundles ortools/.libs as DLLs (passing
+# it on Linux conflicts with versioned .so.* files like libCbc.so.2).
 
 # For linux
 uv run python -m nuitka \
@@ -31,7 +33,6 @@ uv run python -m nuitka \
     --include-package=pydantic \
     --include-package=pydantic_core \
     --include-package=textual \
-    --include-package-data=ortools \
     --assume-yes-for-downloads \
     --output-dir=dist/linux \
     --output-filename=timetable \
@@ -50,7 +51,6 @@ uv run python -m nuitka \
 #            --include-package=pydantic `
 #            --include-package=pydantic_core `
 #            --include-package=textual `
-#            --include-package-data=ortools `
 #            --assume-yes-for-downloads `
 #            --output-dir=dist\windows `
 #            --output-filename=timetable.exe `
@@ -77,7 +77,6 @@ uv run python -m nuitka \
 #            --include-package=pydantic \
 #            --include-package=pydantic_core \
 #            --include-package=textual \
-#            --include-package-data=ortools \
 #            --output-dir=dist/macos \
 #            --output-filename=timetable \
 #            --lto=yes \

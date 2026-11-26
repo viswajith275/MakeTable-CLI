@@ -53,7 +53,6 @@ jobs:
             --include-package=pydantic \
             --include-package=pydantic_core \
             --include-package=textual \
-            --include-package-data=ortools \
             --assume-yes-for-downloads \
             --output-dir=dist/linux \
             --output-filename=timetable \
@@ -72,7 +71,6 @@ jobs:
             --include-package=pydantic \
             --include-package=pydantic_core \
             --include-package=textual \
-            --include-package-data=ortools \
             --assume-yes-for-downloads \
             --output-dir=dist/macos \
             --output-filename=timetable \
@@ -88,6 +86,7 @@ jobs:
         run: |
           "./${{ matrix.output_dir }}/timetable" --help
           "./${{ matrix.output_dir }}/timetable" validate test_json.json
+          "./${{ matrix.output_dir }}/timetable" generate test_json.json --fast -w 1 -f json >/dev/null
 
       - name: Package compressed release archive
         run: |
