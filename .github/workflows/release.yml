@@ -53,6 +53,17 @@ jobs:
             --include-package=pydantic \
             --include-package=pydantic_core \
             --include-package=textual \
+            --nofollow-import-to=matplotlib \
+            --nofollow-import-to=scipy \
+            --nofollow-import-to=pytest \
+            --nofollow-import-to=unittest \
+            --nofollow-import-to=ortools.linear_solver \
+            --nofollow-import-to=ortools.constraint_solver \
+            --nofollow-import-to=ortools.graph \
+            --nofollow-import-to=ortools.algorithms \
+            --nofollow-import-to=ortools.math_opt \
+            --nofollow-import-to=ortools.pdlp \
+            --nofollow-import-to=ortools.scheduling \
             --assume-yes-for-downloads \
             --output-dir=dist/linux \
             --output-filename=timetable \
@@ -71,6 +82,17 @@ jobs:
             --include-package=pydantic \
             --include-package=pydantic_core \
             --include-package=textual \
+            --nofollow-import-to=matplotlib \
+            --nofollow-import-to=scipy \
+            --nofollow-import-to=pytest \
+            --nofollow-import-to=unittest \
+            --nofollow-import-to=ortools.linear_solver \
+            --nofollow-import-to=ortools.constraint_solver \
+            --nofollow-import-to=ortools.graph \
+            --nofollow-import-to=ortools.algorithms \
+            --nofollow-import-to=ortools.math_opt \
+            --nofollow-import-to=ortools.pdlp \
+            --nofollow-import-to=ortools.scheduling \
             --assume-yes-for-downloads \
             --output-dir=dist/macos \
             --output-filename=timetable \

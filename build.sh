@@ -26,6 +26,23 @@ uv sync
 # built-in ortools package config already bundles ortools/.libs as DLLs (passing
 # it on Linux conflicts with versioned .so.* files like libCbc.so.2).
 
+# Exclude unused heavy modules and OR-Tools sub-packages (maketable only uses
+# ortools.sat.python.cp_model; note cp_model imports numpy and pandas at top-level
+# so numpy/pandas must stay included).
+NUITKA_EXCLUDES=(
+    --nofollow-import-to=matplotlib
+    --nofollow-import-to=scipy
+    --nofollow-import-to=pytest
+    --nofollow-import-to=unittest
+    --nofollow-import-to=ortools.linear_solver
+    --nofollow-import-to=ortools.constraint_solver
+    --nofollow-import-to=ortools.graph
+    --nofollow-import-to=ortools.algorithms
+    --nofollow-import-to=ortools.math_opt
+    --nofollow-import-to=ortools.pdlp
+    --nofollow-import-to=ortools.scheduling
+)
+
 # For linux
 uv run python -m nuitka \
     --onefile \
@@ -33,6 +50,7 @@ uv run python -m nuitka \
     --include-package=pydantic \
     --include-package=pydantic_core \
     --include-package=textual \
+    "${NUITKA_EXCLUDES[@]}" \
     --assume-yes-for-downloads \
     --output-dir=dist/linux \
     --output-filename=timetable \
@@ -51,6 +69,17 @@ uv run python -m nuitka \
 #            --include-package=pydantic `
 #            --include-package=pydantic_core `
 #            --include-package=textual `
+#            --nofollow-import-to=matplotlib `
+#            --nofollow-import-to=scipy `
+#            --nofollow-import-to=pytest `
+#            --nofollow-import-to=unittest `
+#            --nofollow-import-to=ortools.linear_solver `
+#            --nofollow-import-to=ortools.constraint_solver `
+#            --nofollow-import-to=ortools.graph `
+#            --nofollow-import-to=ortools.algorithms `
+#            --nofollow-import-to=ortools.math_opt `
+#            --nofollow-import-to=ortools.pdlp `
+#            --nofollow-import-to=ortools.scheduling `
 #            --assume-yes-for-downloads `
 #            --output-dir=dist\windows `
 #            --output-filename=timetable.exe `
@@ -71,18 +100,19 @@ uv run python -m nuitka \
 # Nuitka 4.1.x downloads an x86_64-only ccache that fails under Rosetta on
 # Apple Silicon, so the macOS build disables ccache.
 #
-#        uv run python -m nuitka \
-#            --onefile \
-#            --include-package=maketable \
-#            --include-package=pydantic \
-#            --include-package=pydantic_core \
-#            --include-package=textual \
-#            --output-dir=dist/macos \
-#            --output-filename=timetable \
-#            --lto=yes \
-#            --clang \
-#            --onefile-cache-mode=cached \
-#            --onefile-tempdir-spec="{CACHE_DIR}/timetable_app" \
-#            --disable-cache=ccache \
-#            --remove-output \
-#            src/main.py
+        uv run python -m nuitka \
+            --onefile \
+            --include-package=maketable \
+            --include-package=pydantic \
+            --include-package=pydantic_core \
+            --include-package=textual \
+            "${NUITKA_EXCLUDES[@]}" \
+            --output-dir=dist/macos \
+            --output-filename=timetable \
+            --lto=yes \
+            --clang \
+            --onefile-cache-mode=cached \
+            --onefile-tempdir-spec="{CACHE_DIR}/timetable_app" \
+            --disable-cache=ccache \
+            --remove-output \
+            src/main.py

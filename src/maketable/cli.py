@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 import sys
 from enum import Enum
 from pathlib import Path
@@ -30,13 +31,14 @@ class OutputFormat(str, Enum):
 
 
 def _load_input(input_file: Path) -> TimeTableGenerationInput:
+    input_file = input_file.expanduser()
     if not input_file.exists():
         err_console.print(f"[red]Input file not found:[/red] {input_file}")
         raise typer.Exit(code=1)
 
     try:
         raw_text = input_file.read_text(encoding="utf-8")
-        return TimeTableGenerationInput.model_validate_json(raw_text)
+        return TimeTableGenerationInput.model_validate(json.loads(raw_text))
 
     except ValidationError as e:
         err_console.print("[red]Input validation failed:[/red]")
@@ -58,13 +60,14 @@ def _load_hint_input(input_file: Path | None) -> GeneratedResponse | None:
     if not input_file:
         return None
 
+    input_file = input_file.expanduser()
     if not input_file.exists():
         err_console.print(f"[red]Input file not found:[/red] {input_file}")
         raise typer.Exit(code=1)
 
     try:
         raw_text = input_file.read_text(encoding="utf-8")
-        return GeneratedResponse.model_validate_json(raw_text)
+        return GeneratedResponse.model_validate(json.loads(raw_text))
 
     except ValidationError as e:
         err_console.print("[red]Hint validation failed:[/red]")
@@ -84,8 +87,9 @@ def _load_hint_input(input_file: Path | None) -> GeneratedResponse | None:
 
 def _write_file(path: Path, text: str) -> None:
     """Write text to a file, reporting failures without a traceback."""
+    path = path.expanduser()
     try:
-        path.expanduser().write_text(text, encoding="utf-8")
+        path.write_text(text, encoding="utf-8")
     except OSError as e:
         err_console.print(f"[red]Could not write {path}:[/red] {e}")
         raise typer.Exit(code=1)
@@ -200,6 +204,8 @@ def _write_output(
     fmt: OutputFormat,
     show_violations: bool,
 ):
+    if output_file is not None:
+        output_file = output_file.expanduser()
     if fmt == OutputFormat.json:
         text = response.model_dump_json(indent=2)
         if output_file:
@@ -224,7 +230,7 @@ def _write_output(
             if show_violations:
                 _print_violations(response)
         else:
-            typer.echo(csv_text)
+            typer.echo(csv_text, nl=False)
         return
 
     if output_file:
@@ -343,6 +349,11 @@ def generate(
         "--patience",
         help="Stop after this many seconds without a better timetable (0 disables)",
     ),
+    strict: bool = typer.Option(
+        False,
+        "--strict",
+        help="Require structural constraints to hold strictly without soft fallback",
+    ),
     show_violations: bool = typer.Option(
         True,
         "--violations/--no-violations",
@@ -350,6 +361,19 @@ def generate(
     ),
 ):
     """Generate a timetable from a project file."""
+    if not math.isfinite(time_limit) or time_limit <= 0:
+        err_console.print("[red]Time limit must be a finite number greater than zero.[/red]")
+        raise typer.Exit(code=1)
+    if workers < 1:
+        err_console.print("[red]Workers must be at least 1.[/red]")
+        raise typer.Exit(code=1)
+    if not math.isfinite(patience) or patience < 0:
+        err_console.print("[red]Patience must be a finite number >= 0.[/red]")
+        raise typer.Exit(code=1)
+    if gap_limit is not None and (not math.isfinite(gap_limit) or gap_limit < 0):
+        err_console.print("[red]Gap limit must be a finite number >= 0.[/red]")
+        raise typer.Exit(code=1)
+
     data = _load_input(input_file)
     if not data.teacher_assignments:
         err_console.print(
@@ -370,12 +394,13 @@ def generate(
             fast=fast,
             gap_limit=gap_limit,
             patience=patience,
+            strict=strict,
         )
 
     if not response.success:
         err_console.print("[red]No feasible timetable found.[/red]")
         if response.violations:
-            _print_violations(response)
+            _print_violations(response, err_console)
         raise typer.Exit(code=1)
 
     _write_output(
@@ -398,7 +423,7 @@ def schema(
     text = json.dumps(schema_dict, indent=2)
     if output_file:
         _write_file(output_file, text)
-        err_console.print(f"[green]Wrote schema to[/green] {output_file}")
+        err_console.print(f"[green]Wrote schema to[/green] {output_file.expanduser()}")
     else:
         typer.echo(text)
 

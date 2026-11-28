@@ -15,6 +15,9 @@ Or use the CLI / TUI:
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Callable
+import threading
+
 from .models import (
     ClassConstraints,
     ClassInput,
@@ -37,7 +40,9 @@ from .models import (
     format_day_slots,
     parse_day_slots,
 )
-from .solver import TimeTableGenerator
+
+if TYPE_CHECKING:
+    from .solver import TimeTableGenerator
 
 __version__ = "0.1.0"
 
@@ -81,7 +86,7 @@ def validate_project(
 
     try:
         if isinstance(data, Path):
-            text = data.read_text(encoding="utf-8")
+            text = data.expanduser().read_text(encoding="utf-8")
             TimeTableGenerationInput.model_validate_json(text)
         elif isinstance(data, str):
             TimeTableGenerationInput.model_validate_json(data)
@@ -102,6 +107,14 @@ def validate_project(
         return [str(err)]
 
 
+def __getattr__(name: str):
+    if name == "TimeTableGenerator":
+        from .solver import TimeTableGenerator
+
+        return TimeTableGenerator
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
 def generate(
     data: TimeTableGenerationInput,
     *,
@@ -112,8 +125,13 @@ def generate(
     fast: bool = False,
     gap_limit: float | None = None,
     patience: float = 5.0,
+    strict: bool = False,
+    on_phase: Callable[[str, str], None] | None = None,
+    cancel_event: threading.Event | None = None,
 ) -> GeneratedResponse:
     """Validate and solve a timetable in one call."""
+    from .solver import TimeTableGenerator
+
     data = TimeTableGenerationInput.model_validate(data.model_dump())
     return TimeTableGenerator(RawData=data, HintData=hint).solve(
         time_limit_sec=time_limit_sec,
@@ -122,4 +140,7 @@ def generate(
         fast=fast,
         gap_limit=gap_limit,
         patience=patience,
+        strict=strict,
+        on_phase=on_phase,
+        cancel_event=cancel_event,
     )

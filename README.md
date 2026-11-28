@@ -12,7 +12,7 @@
 - **Interactive TUI** — Manage projects, rooms, classes, teachers, subjects, and assignments with real-time feasibility checks and weekly grid views.
 - **Flexible CLI** — Validate inputs, inspect the JSON Schema, and output schedules as rich terminal tables, JSON, or formula-safe CSV.
 - **Validation guard rails** — Catches duplicate names/IDs, missing references, impossible min/max ranges, over-allocated weekly slots, and break-crossing blocks before solving.
-- **Department &amp; college support** — Universal break slots, teacher unavailable/avoided slots, max working days per week, multi-period atomic lab blocks, merged lectures, and concurrent split batches.
+- **Department &amp; college support** — Universal break slots, teacher unavailable/avoided slots, max working days per week, multi-period atomic lab blocks, merged lectures, concurrent split batches, and fixed subject day/slot pins.
 - **Warm starts** — Reuse a previous schedule JSON as a solver hint for faster re-solving.
 
 ---
@@ -74,7 +74,7 @@ timetable tui school.json
   <li><strong>Rooms</strong> — Define classrooms and labs, including simultaneous class <code>capacity</code> for shared halls/auditoriums.</li>
   <li><strong>Classes</strong> — Add classes or sections and assign each one a default home room.</li>
   <li><strong>Teachers</strong> — Configure daily, weekly, and consecutive class limits, optional <code>max_days_per_week</code>, hard <code>unavailable_slots</code> (e.g. <code>Mon:1, Wed:3-4</code>), and soft <code>avoid_slots</code>.</li>
-  <li><strong>Subjects</strong> — Set <code>morning_tendency</code> (<code>Low</code>, <code>Med</code>, <code>High</code>) and daily/weekly/consecutive min and max limits.</li>
+  <li><strong>Subjects</strong> — Set <code>morning_tendency</code> (<code>Low</code>, <code>Med</code>, <code>High</code>), daily/weekly/consecutive min and max limits, and <code>fixed_slots</code> to pin the subject to specific day/slot pairs (e.g. <code>Tue:6-8, Thu:6-8</code>).</li>
   <li><strong>Assignments</strong> — Pair a class, teacher, and subject with optional batch/elective <code>tag</code>, <code>target_room_id</code> override, atomic <code>period_length</code>, <code>co_schedule_with</code> links, and <code>first_slot_days</code>.</li>
   <li><strong>Timetable</strong> — Adjust <em>Time</em>, <em>Seed</em>, <em>Workers</em>, <em>Gap</em>, <em>Patience</em>, <em>Fast</em>, and <em>Hint</em>, then generate. Inspect <strong>Class Schedule</strong>, <strong>Teacher Schedule</strong>, <strong>Room Schedule</strong>, or <strong>All Entries</strong>, and export to CSV or JSON.</li>
 </ol>
@@ -274,7 +274,12 @@ timetable generate school.json --previous-hint result.json -t 180 --patience 0 -
         "max_per_week": 7,
         "min_per_week": 7,
         "max_consecutive": 2,
-        "min_consecutive": 1
+        "min_consecutive": 1,
+        "fixed_slots": [
+          { "day": "Tue", "slot": 6 },
+          { "day": "Tue", "slot": 7 },
+          { "day": "Tue", "slot": 8 }
+        ]
       }
     }
   ],
@@ -299,6 +304,7 @@ timetable generate school.json --previous-hint result.json -t 180 --patience 0 -
   <li><strong>Merged lectures (across classes)</strong> — Create one assignment per class with the same teacher, subject, and <code>target_room_id</code> (room <code>capacity &gt;= 2</code>), and link their IDs in <code>co_schedule_with</code>.</li>
   <li><strong>Concurrent split batches (within a class)</strong> — Create two assignments on the same class with distinct <code>tag</code> values (e.g. <code>"Batch 1"</code>, <code>"Batch 2"</code>), separate teachers and rooms, and link them via <code>co_schedule_with</code>.</li>
   <li><strong>Atomic lab blocks</strong> — Set <code>period_length</code> &gt; <code>1</code>; blocks are scheduled contiguously and never cross <code>break_slots</code>.</li>
+  <li><strong>Fixed subject slots</strong> — Add <code>fixed_slots</code> to a subject to pin it to specific day/slot pairs for every class that takes it (e.g. minor courses on <code>Tue:6-8</code> and <code>Thu:6-8</code>; list the whole block for multi-period assignments). The TUI accepts ranges like <code>Tue:6-8, Thu:6-8</code>.</li>
 </ul>
 
 </details>
@@ -401,7 +407,7 @@ refined = generator.solve(time_limit_sec=60, seed=42, workers=8)
   <li><strong>Co-scheduled variable sharing</strong> — Linked assignments (via <code>co_schedule_with</code>) are grouped with union-find so every member of a group shares a single boolean decision grid per day and slot rather than duplicating variables and equality constraints.</li>
   <li><strong>Atomic multi-period blocks</strong> — When <code>period_length &gt; 1</code>, decision variables represent valid contiguous start slots that never cross <code>break_slots</code>; slot occupancy is derived from overlapping start windows and consecutive starts are constrained with <code>at_most_one</code>.</li>
   <li><strong>Hard constraints</strong> — At most one non-co-scheduled period per class and per teacher in any slot, room <code>capacity</code> limits per slot, universal <code>break_slots</code> fixed to zero, and teacher <code>unavailable_slots</code> fixed to zero.</li>
-  <li><strong>Soft constraints with slack reporting</strong> — Teacher limits (<code>max_per_day</code>, <code>max_per_week</code>, <code>max_consecutive</code>, <code>max_days_per_week</code>, <code>avoid_slots</code>), subject min/max rules, and assignment <code>first_slot_days</code> use bounded slack variables weighted in the minimization objective so impossible combinations degrade gracefully and surface actionable violation messages.</li>
+  <li><strong>Soft constraints with slack reporting</strong> — Teacher limits (<code>max_per_day</code>, <code>max_per_week</code>, <code>max_consecutive</code>, <code>max_days_per_week</code>, <code>avoid_slots</code>), subject min/max rules, assignment <code>first_slot_days</code>, and subject <code>fixed_slots</code> use bounded slack variables weighted in the minimization objective so impossible combinations degrade gracefully and surface actionable violation messages.</li>
   <li><strong>Silent quality objectives</strong> — Linear prefix/suffix occupancy checks penalize idle teacher and class gaps (ignoring break slots), balance daily teacher loads, reward <code>morning_tendency</code>, and encourage slot variety across days.</li>
   <li><strong>Hinting &amp; early stopping</strong> — When no previous result is supplied, a lightweight greedy pass seeds conflict-free initial hints (prioritizing pinned first-slot classes, multi-period labs, and shared resources). During search, a background <code>_PlateauStopper</code> callback halts solving once the objective stops improving for <code>patience</code> seconds.</li>
 </ul>

@@ -12,7 +12,7 @@ from .models import (
 import collections
 import threading
 import time
-from typing import List, Dict
+from typing import Callable, Dict, List
 
 @dataclass
 class SlackTracker:
@@ -22,32 +22,55 @@ class SlackTracker:
 
 
 class _PlateauStopper(cp_model.CpSolverSolutionCallback):
-    """Stop the search once no better timetable has appeared for a while.
+    """Stop the search once no better timetable has appeared for a while, or if
+    no feasible solution appears before ``no_solution_timeout``.
 
-    CP-SAT's relative gap limit rarely fires on this model because the objective
+    CP-SAT's relative gap limit rarely fires on this model when the objective
     mixes violation slacks that give a weak bound, so a stagnation stop is what
     actually ends the search early without giving up quality.
     """
 
-    def __init__(self, solver: cp_model.CpSolver, patience: float) -> None:
+    def __init__(
+        self,
+        solver: cp_model.CpSolver,
+        patience: float,
+        no_solution_timeout: float | None = None,
+        cancel_event: threading.Event | None = None,
+    ) -> None:
         super().__init__()
         self._solver = solver
         self._patience = patience
+        self._no_solution_timeout = no_solution_timeout
+        self._cancel_event = cancel_event
         self._best: float | None = None
-        self._last_improvement = time.monotonic()
+        now = time.monotonic()
+        self._start_time = now
+        self._last_improvement = now
         self._finished = threading.Event()
         threading.Thread(target=self._watch, daemon=True).start()
 
     def _watch(self) -> None:
-        while not self._finished.wait(0.2):
-            if (
-                self._best is not None
-                and time.monotonic() - self._last_improvement >= self._patience
-            ):
+        poll_interval = 0.05 if self._cancel_event is not None else 0.1
+        while not self._finished.wait(poll_interval):
+            if self._cancel_event is not None and self._cancel_event.is_set():
+                self._solver.stop_search()
+                return
+            now = time.monotonic()
+            if self._best is None:
+                if (
+                    self._no_solution_timeout is not None
+                    and now - self._start_time >= self._no_solution_timeout
+                ):
+                    self._solver.stop_search()
+                    return
+            elif self._patience > 0 and now - self._last_improvement >= self._patience:
                 self._solver.stop_search()
                 return
 
     def on_solution_callback(self) -> None:
+        if self._cancel_event is not None and self._cancel_event.is_set():
+            self._solver.stop_search()
+            return
         objective = self.objective_value
         if self._best is None or objective < self._best:
             self._best = objective
@@ -71,16 +94,7 @@ class TimeTableGenerator:
         self.rooms_dict    = {r.id: r for r in RawData.rooms}
         self.classes_dict  = {c.id: c for c in RawData.classes}
 
-        self.model = cp_model.CpModel()
         self.slots = RawData.project.slots
-
-        self.teacher_schedule = collections.defaultdict(lambda: collections.defaultdict(lambda: collections.defaultdict(list)))
-        self.subject_schedule = collections.defaultdict(lambda: collections.defaultdict(lambda: collections.defaultdict(list)))
-        self.room_schedule    = collections.defaultdict(lambda: collections.defaultdict(lambda: collections.defaultdict(list)))
-        self.class_schedule   = collections.defaultdict(lambda: collections.defaultdict(lambda: collections.defaultdict(list)))
-        self.class_subject_schedule = collections.defaultdict(lambda: collections.defaultdict(lambda: collections.defaultdict(lambda: collections.defaultdict(list))))
-        self.assignment_schedule = collections.defaultdict(lambda: collections.defaultdict(dict))
-
         self.assignments = RawData.teacher_assignments
 
         self.MorningTendencyValues = {
@@ -100,13 +114,39 @@ class TimeTableGenerator:
         self.break_slots = sorted(RawData.project.break_slots)
         self.break_slot_indices = {s - 1 for s in self.break_slots if 0 <= s - 1 < self.slots}
         self.assignment_co_group = _co_schedule_roots(self.assignments)
+        self.class_subject_min_len: dict[tuple, int] = {}
+        for assignment in self.assignments:
+            cs_key = (assignment.class_id, assignment.subject_id)
+            plen = assignment.constraints.period_length
+            prev = self.class_subject_min_len.get(cs_key)
+            if prev is None or plen < prev:
+                self.class_subject_min_len[cs_key] = plen
+        self._teacher_unavail_by_day: dict = {
+            t_id: {
+                (self.day_to_index[u.day], u.slot - 1)
+                for u in teacher.constraints.unavailable_slots
+                if u.day in self.day_to_index
+            }
+            for t_id, teacher in self.teachers_dict.items()
+        }
 
         self.hint_vars = HintData
+        self._reset_build_state()
 
+    def _reset_build_state(self) -> None:
+        self.model = cp_model.CpModel()
+        self.teacher_schedule = collections.defaultdict(lambda: collections.defaultdict(lambda: collections.defaultdict(list)))
+        self.subject_schedule = collections.defaultdict(lambda: collections.defaultdict(lambda: collections.defaultdict(list)))
+        self.room_schedule    = collections.defaultdict(lambda: collections.defaultdict(lambda: collections.defaultdict(list)))
+        self.class_schedule   = collections.defaultdict(lambda: collections.defaultdict(lambda: collections.defaultdict(list)))
+        self.class_subject_schedule = collections.defaultdict(lambda: collections.defaultdict(lambda: collections.defaultdict(lambda: collections.defaultdict(list))))
+        self.assignment_schedule = collections.defaultdict(lambda: collections.defaultdict(dict))
         self.error_slacks: Dict[str, SlackTracker] = {}
         self.slack_counter: int = 0
         self.silent_minimization: list = []
         self._built = False
+        self._hard_mode = False
+        self._hard_impossible = False
 
     def _minimize_gaps(self, label: str, weight: int = 3) -> None:
         # Linear prefix/suffix occupancy formulation avoids O(S^2) LinMax and
@@ -182,44 +222,54 @@ class TimeTableGenerator:
 
         return slack_var
 
-    def _build_group_day_vars(self, co_group, period_length: int) -> dict[int, dict[int, cp_model.IntVar]]:
-        """Create one shared variable grid per co-schedule group instead of duplicating variables."""
+    def _build_group_day_vars(
+        self,
+        co_group,
+        period_length: int,
+        blocked_slots_by_day: dict[int, set[int]],
+    ) -> dict[int, dict[int, cp_model.IntVar]]:
+        """Create one shared variable grid per co-schedule group, skipping blocked slots."""
         group_vars: dict[int, dict[int, cp_model.IntVar]] = collections.defaultdict(dict)
         k = period_length
+        base_starts = valid_block_starts(self.slots, self.break_slots, k) if k > 1 else []
         for day in self.days:
+            blocked = blocked_slots_by_day.get(day, self.break_slot_indices)
             if k <= 1:
                 for slot in range(self.slots):
-                    var = self.model.new_bool_var(f"assign_{co_group}_d{day}_s{slot}")
-                    if slot in self.break_slot_indices:
-                        self.model.add(var == 0)
-                    group_vars[day][slot] = var
+                    if slot in blocked:
+                        continue
+                    group_vars[day][slot] = self.model.new_bool_var(
+                        f"assign_{co_group}_d{day}_s{slot}"
+                    )
             else:
                 start_vars = {
                     s: self.model.new_bool_var(f"start_{co_group}_d{day}_s{s}")
-                    for s in valid_block_starts(self.slots, self.break_slots, k)
+                    for s in base_starts
+                    if not any((s + off) in blocked for off in range(k))
                 }
                 for s in start_vars:
-                    conflicts = [start_vars[s2] for s2 in range(s, min(self.slots, s + k)) if s2 in start_vars]
+                    conflicts = [
+                        start_vars[s2]
+                        for s2 in range(s, min(self.slots, s + k))
+                        if s2 in start_vars
+                    ]
                     if len(conflicts) > 1:
                         self.model.add_at_most_one(conflicts)
                 for slot in range(self.slots):
-                    if slot in self.break_slot_indices:
-                        var = self.model.new_bool_var(f"assign_{co_group}_d{day}_s{slot}")
-                        self.model.add(var == 0)
+                    if slot in blocked:
+                        continue
+                    covering = [
+                        start_vars[s]
+                        for s in range(max(0, slot - k + 1), slot + 1)
+                        if s in start_vars
+                    ]
+                    if not covering:
+                        continue
+                    if len(covering) == 1:
+                        var = covering[0]
                     else:
-                        covering = [
-                            start_vars[s]
-                            for s in range(max(0, slot - k + 1), slot + 1)
-                            if s in start_vars
-                        ]
-                        if not covering:
-                            var = self.model.new_bool_var(f"assign_{co_group}_d{day}_s{slot}")
-                            self.model.add(var == 0)
-                        elif len(covering) == 1:
-                            var = covering[0]
-                        else:
-                            var = self.model.new_bool_var(f"assign_{co_group}_d{day}_s{slot}")
-                            self.model.add(var == sum(covering))
+                        var = self.model.new_bool_var(f"assign_{co_group}_d{day}_s{slot}")
+                        self.model.add(var == sum(covering))
                     group_vars[day][slot] = var
         return group_vars
 
@@ -230,6 +280,16 @@ class TimeTableGenerator:
         class_subject_slot_groups: dict = collections.defaultdict(lambda: collections.defaultdict(set))
         co_group_vars: dict = {}
 
+        co_group_blocked: dict = {}
+        for assignment in self.assignments:
+            co_group = self.assignment_co_group[assignment.id]
+            blocked_map = co_group_blocked.setdefault(
+                co_group, {day: set(self.break_slot_indices) for day in self.days}
+            )
+            for d_idx, s_idx in self._teacher_unavail_by_day.get(assignment.teacher_id, ()):
+                if d_idx in blocked_map and 0 <= s_idx < self.slots:
+                    blocked_map[d_idx].add(s_idx)
+
         for assignment in self.assignments:
             class_ = self.classes_dict[assignment.class_id]
             room = self.rooms_dict[class_.room_id]
@@ -239,37 +299,39 @@ class TimeTableGenerator:
             co_group = self.assignment_co_group[assignment.id]
             if co_group not in co_group_vars:
                 co_group_vars[co_group] = self._build_group_day_vars(
-                    co_group, assignment.constraints.period_length
+                    co_group,
+                    assignment.constraints.period_length,
+                    co_group_blocked[co_group],
                 )
             group_grid = co_group_vars[co_group]
+            _ = self.class_subject_schedule[class_.id][assignment.subject_id]
+            _ = self.assignment_schedule[assignment.id]
 
             for day in self.days:
-                for slot in range(self.slots):
-                    var = group_grid[day][slot]
-                    if slot not in self.break_slot_indices:
-                        if (assignment.teacher_id, co_group) not in teacher_slot_groups[day][slot]:
-                            teacher_slot_groups[day][slot].add((assignment.teacher_id, co_group))
-                            self.teacher_schedule[assignment.teacher_id][day][slot].append(var)
+                for slot, var in group_grid[day].items():
+                    if (assignment.teacher_id, co_group) not in teacher_slot_groups[day][slot]:
+                        teacher_slot_groups[day][slot].add((assignment.teacher_id, co_group))
+                        self.teacher_schedule[assignment.teacher_id][day][slot].append(var)
 
-                        # Capacity counts classes, so merged classes sharing
-                        # a room each consume a place even when co-scheduled.
-                        room_key = (room.id, class_.id, co_group)
-                        if room_key not in room_slot_groups[day][slot]:
-                            room_slot_groups[day][slot].add(room_key)
-                            self.room_schedule[room.id][day][slot].append(var)
+                    # Capacity counts classes, so merged classes sharing
+                    # a room each consume a place even when co-scheduled.
+                    room_key = (room.id, class_.id, co_group)
+                    if room_key not in room_slot_groups[day][slot]:
+                        room_slot_groups[day][slot].add(room_key)
+                        self.room_schedule[room.id][day][slot].append(var)
 
-                        if (class_.id, co_group) not in class_slot_groups[day][slot]:
-                            class_slot_groups[day][slot].add((class_.id, co_group))
-                            self.class_schedule[class_.id][day][slot].append(var)
+                    if (class_.id, co_group) not in class_slot_groups[day][slot]:
+                        class_slot_groups[day][slot].add((class_.id, co_group))
+                        self.class_schedule[class_.id][day][slot].append(var)
 
-                        if (class_.id, assignment.subject_id, co_group) not in class_subject_slot_groups[day][slot]:
-                            class_subject_slot_groups[day][slot].add((class_.id, assignment.subject_id, co_group))
-                            self.class_subject_schedule[class_.id][assignment.subject_id][day][slot].append(var)
+                    if (class_.id, assignment.subject_id, co_group) not in class_subject_slot_groups[day][slot]:
+                        class_subject_slot_groups[day][slot].add((class_.id, assignment.subject_id, co_group))
+                        self.class_subject_schedule[class_.id][assignment.subject_id][day][slot].append(var)
 
                     self.assignment_schedule[assignment.id][day][slot] = var
 
     def _apply_hints_vars(self) -> None:
-        if self.hint_vars is None:
+        if self.hint_vars is None or not self.hint_vars.entries:
             self._apply_greedy_hints()
             return
 
@@ -338,10 +400,12 @@ class TimeTableGenerator:
                 )
                 for a in members
             )
-            rooms = [
-                (a.class_id, a.target_room_id or self.classes_dict[a.class_id].room_id)
-                for a in members
-            ]
+            rooms = list(
+                dict.fromkeys(
+                    (a.class_id, a.target_room_id or self.classes_dict[a.class_id].room_id)
+                    for a in members
+                )
+            )
             teachers = {a.teacher_id for a in members}
             classes = {a.class_id for a in members}
             group_meta.append(
@@ -483,6 +547,10 @@ class TimeTableGenerator:
                     if active_slots <= max_limit:
                         continue
 
+                    if self._hard_mode:
+                        self.model.add(sum(vars_for_this_day) <= max_limit)
+                        continue
+
                     error_msg = f"Max daily classes exceeded for {teacher.name} (limit: {max_limit})"
                     slack = self._create_slack(
                         name="teacher daily limit",
@@ -507,6 +575,10 @@ class TimeTableGenerator:
                 if active_slots <= max_limit:
                     continue
 
+                if self._hard_mode:
+                    self.model.add(sum(vars_for_week) <= max_limit)
+                    continue
+
                 error_msg = f"Max weekly classes exceeded for {teacher.name} (limit: {max_limit})"
                 slack = self._create_slack(
                     name="teacher weekly limit",
@@ -524,7 +596,7 @@ class TimeTableGenerator:
                 if self.slots < max_limit + 1:
                     continue
                 max_window_size = max_limit + 1
-                error_msg = f"Max consecutive classes exceeded {teacher.name} (limit: {max_limit})"
+                error_msg = f"Max consecutive classes exceeded for {teacher.name} (limit: {max_limit})"
 
                 for day in self.days:
                     for start_slot in range(self.slots - max_window_size + 1):
@@ -535,6 +607,10 @@ class TimeTableGenerator:
                                 active_slots += 1
                                 vars_for_consecutive.extend(schedule_grid[day][slot])
                         if active_slots <= max_limit:
+                            continue
+
+                        if self._hard_mode:
+                            self.model.add(sum(vars_for_consecutive) <= max_limit)
                             continue
 
                         slack = self._create_slack(
@@ -602,6 +678,7 @@ class TimeTableGenerator:
 
     def _teacher_avoid_slots(self) -> None:
         for t_id, teacher in self.teachers_dict.items():
+            seen_slots: set[tuple[int, int]] = set()
             for slot_item in teacher.constraints.avoid_slots:
                 day_idx = self.day_to_index.get(slot_item.day)
                 slot_idx = slot_item.slot - 1
@@ -610,7 +687,9 @@ class TimeTableGenerator:
                     and day_idx in self.days
                     and 0 <= slot_idx < self.slots
                     and slot_idx not in self.break_slot_indices
+                    and (day_idx, slot_idx) not in seen_slots
                 ):
+                    seen_slots.add((day_idx, slot_idx))
                     vars_at_time = self.teacher_schedule[t_id][day_idx][slot_idx]
                     if vars_at_time:
                         error_msg = f"{teacher.name}: Assigned during avoided slot ({slot_item.day.value} Slot {slot_item.slot})"
@@ -642,6 +721,9 @@ class TimeTableGenerator:
                         day_worked_vars.append(worked)
 
                 if len(day_worked_vars) > max_days:
+                    if self._hard_mode:
+                        self.model.add(sum(day_worked_vars) <= max_days)
+                        continue
                     error_msg = f"Max working days exceeded for {teacher.name} (limit: {max_days})"
                     slack = self._create_slack(
                         name="teacher max days",
@@ -669,6 +751,10 @@ class TimeTableGenerator:
                         if active_slots <= max_limit:
                             continue
 
+                        if self._hard_mode:
+                            self.model.add(sum(vars_for_day) <= max_limit)
+                            continue
+
                         slack = self._create_slack(
                             name="subject daily limit",
                             error_msg=error_msg,
@@ -686,10 +772,27 @@ class TimeTableGenerator:
                 if min_limit is not None and min_limit > 0:
                     error_msg = f"{class_name}: Min daily classes didn't meet for {subject.name} (required: {min_limit})"
                     for day in self.days:
-                        vars_for_day = [
-                            v for slot in range(self.slots) for v in days_dict[day][slot]
-                        ]
+                        active_slots = 0
+                        vars_for_day = []
+                        for slot in range(self.slots):
+                            if days_dict[day][slot]:
+                                active_slots += 1
+                                vars_for_day.extend(days_dict[day][slot])
+                        if self._hard_mode:
+                            if active_slots < min_limit:
+                                self._hard_impossible = True
+                                return
+                            self.model.add(sum(vars_for_day) >= min_limit)
+                            continue
+
                         if not vars_for_day:
+                            slack = self._create_slack(
+                                name="subject daily required",
+                                error_msg=error_msg,
+                                weight=200,
+                                upper_bound=min_limit,
+                            )
+                            self.model.add(slack == min_limit)
                             continue
 
                         slack = self._create_slack(
@@ -717,6 +820,10 @@ class TimeTableGenerator:
                     if active_slots <= max_limit:
                         continue
 
+                    if self._hard_mode:
+                        self.model.add(sum(vars_for_week) <= max_limit)
+                        continue
+
                     error_msg = f"{class_name}: Max weekly classes exceeded for {subject.name} (limit: {max_limit})"
                     slack = self._create_slack(
                         name="subject weekly limit",
@@ -733,16 +840,31 @@ class TimeTableGenerator:
                 subject = self.subjects_dict[sub_id]
                 min_limit = subject.constraints.min_per_week
                 if min_limit is not None and min_limit > 0:
-                    vars_for_week = [
-                        v
-                        for day in self.days
-                        for slot in range(self.slots)
-                        for v in days_dict[day][slot]
-                    ]
-                    if not vars_for_week:
+                    active_slots = 0
+                    vars_for_week = []
+                    for day in self.days:
+                        for slot in range(self.slots):
+                            if days_dict[day][slot]:
+                                active_slots += 1
+                                vars_for_week.extend(days_dict[day][slot])
+                    if self._hard_mode:
+                        if active_slots < min_limit:
+                            self._hard_impossible = True
+                            return
+                        self.model.add(sum(vars_for_week) >= min_limit)
                         continue
 
                     error_msg = f"{class_name}: Min weekly classes didn't meet for {subject.name} (required: {min_limit})"
+                    if not vars_for_week:
+                        slack = self._create_slack(
+                            name="subject weekly required",
+                            error_msg=error_msg,
+                            weight=200,
+                            upper_bound=min_limit,
+                        )
+                        self.model.add(slack == min_limit)
+                        continue
+
                     slack = self._create_slack(
                         name="subject weekly required",
                         error_msg=error_msg,
@@ -770,6 +892,10 @@ class TimeTableGenerator:
                             if active_slots <= max_limit:
                                 continue
 
+                            if self._hard_mode:
+                                self.model.add(sum(window_vars) <= max_limit)
+                                continue
+
                             slack = self._create_slack(
                                 name="subject maximum consecutive class",
                                 error_msg=error_msg,
@@ -784,53 +910,112 @@ class TimeTableGenerator:
             for sub_id, days_dict in subjects.items():
                 subject = self.subjects_dict[sub_id]
                 min_limit = subject.constraints.min_consecutive
-                if min_limit is not None and min_limit > 1 and self.slots >= min_limit:
-                    error_msg = (
-                        f"{class_name}: Min consecutive classes didn't meet for {subject.name} (required: {min_limit})"
-                    )
-                    for day in self.days:
-                        if not any(days_dict[day][s] for s in range(self.slots)):
+                if min_limit is None or min_limit <= 1 or self.slots < min_limit:
+                    continue
+                if self.class_subject_min_len.get((c_id, sub_id), 1) >= min_limit:
+                    continue
+
+                error_msg = (
+                    f"{class_name}: Min consecutive classes didn't meet for {subject.name} (required: {min_limit})"
+                )
+                for day in self.days:
+                    if not any(days_dict[day][s] for s in range(self.slots)):
+                        continue
+
+                    slot_occ = []
+                    for slot in range(self.slots):
+                        v_list = days_dict[day][slot]
+                        if not v_list:
+                            slot_occ.append(0)
+                        elif len(v_list) == 1:
+                            slot_occ.append(v_list[0])
+                        else:
+                            occ = self.model.new_bool_var(
+                                f"socc_{c_id}_{sub_id}_{day}_{slot}"
+                            )
+                            self.model.add(occ == sum(v_list))
+                            slot_occ.append(occ)
+
+                    for i in range(self.slots):
+                        if not days_dict[day][i]:
                             continue
+                        curr = slot_occ[i]
+                        if i == 0 or not days_dict[day][i - 1]:
+                            is_start = curr
+                        else:
+                            prev = slot_occ[i - 1]
+                            is_start = self.model.new_bool_var(
+                                f"blk_start_{c_id}_{sub_id}_{day}_{i}"
+                            )
+                            self.model.add(is_start >= curr - prev)
 
-                        slot_occ = []
-                        for slot in range(self.slots):
-                            v_list = days_dict[day][slot]
-                            if not v_list:
-                                slot_occ.append(0)
-                            elif len(v_list) == 1:
-                                slot_occ.append(v_list[0])
+                        present_slots = []
+                        has_missing = False
+                        for k in range(1, min_limit):
+                            j = i + k
+                            if j < self.slots and days_dict[day][j]:
+                                present_slots.append(j)
                             else:
-                                occ = self.model.new_bool_var(
-                                    f"socc_{c_id}_{sub_id}_{day}_{slot}"
-                                )
-                                self.model.add(occ == sum(v_list))
-                                slot_occ.append(occ)
+                                has_missing = True
 
-                        for i in range(self.slots):
-                            if not days_dict[day][i]:
-                                continue
-                            curr = slot_occ[i]
-                            if i == 0 or not days_dict[day][i - 1]:
-                                is_start = curr
+                        if self._hard_mode:
+                            if has_missing:
+                                self.model.add(is_start == 0)
                             else:
-                                prev = slot_occ[i - 1]
-                                is_start = self.model.new_bool_var(
-                                    f"blk_start_{c_id}_{sub_id}_{day}_{i}"
-                                )
-                                self.model.add(is_start >= curr - prev)
-
-                            for k in range(1, min_limit):
-                                j = i + k
-                                slack = self._create_slack(
-                                    name="subject min consecutive",
-                                    error_msg=error_msg,
-                                    weight=270,
-                                    upper_bound=1,
-                                )
-                                if j < self.slots and days_dict[day][j]:
+                                for j in present_slots:
+                                    self.model.add(slot_occ[j] >= is_start)
+                        else:
+                            slack = self._create_slack(
+                                name="subject min consecutive",
+                                error_msg=error_msg,
+                                weight=270,
+                                upper_bound=1,
+                            )
+                            if has_missing:
+                                self.model.add(slack >= is_start)
+                            else:
+                                for j in present_slots:
                                     self.model.add(slot_occ[j] + slack >= is_start)
-                                else:
-                                    self.model.add(slack >= is_start)
+
+    def _subject_fixed_slots(self) -> None:
+        for c_id, subjects in self.class_subject_schedule.items():
+            class_name = self.classes_dict[c_id].name
+            for sub_id, days_dict in subjects.items():
+                subject = self.subjects_dict[sub_id]
+                seen_slots: set[tuple[int, int]] = set()
+                for slot_item in subject.constraints.fixed_slots:
+                    day_idx = self.day_to_index.get(slot_item.day)
+                    slot_idx = slot_item.slot - 1
+                    if day_idx is None or day_idx not in self.days:
+                        continue
+                    if not 0 <= slot_idx < self.slots or slot_idx in self.break_slot_indices:
+                        continue
+                    if (day_idx, slot_idx) in seen_slots:
+                        continue
+                    seen_slots.add((day_idx, slot_idx))
+
+                    vars_at_time = days_dict[day_idx][slot_idx]
+                    if self._hard_mode:
+                        if not vars_at_time:
+                            self._hard_impossible = True
+                            return
+                        self.model.add(sum(vars_at_time) >= 1)
+                        continue
+
+                    error_msg = (
+                        f"{class_name}: Fixed slot {slot_item} not scheduled "
+                        f"for {subject.name}"
+                    )
+                    slack = self._create_slack(
+                        name="subject fixed slot",
+                        error_msg=error_msg,
+                        weight=250,
+                        upper_bound=1,
+                    )
+                    if not vars_at_time:
+                        self.model.add(slack == 1)
+                    else:
+                        self.model.add(sum(vars_at_time) + slack >= 1)
 
     def _subject_morning_tendency(self) -> None:
         for c_id, subjects in self.class_subject_schedule.items():
@@ -892,10 +1077,14 @@ class TimeTableGenerator:
                     continue
 
                 vars_for_day = vars_for_assignment.get(day_idx)
-                if not vars_for_day or FIRST_SLOT_INDEX not in vars_for_day:
+                first_slot_var = vars_for_day.get(FIRST_SLOT_INDEX) if vars_for_day else None
+                if self._hard_mode:
+                    if first_slot_var is None:
+                        self._hard_impossible = True
+                        return
+                    self.model.add(first_slot_var == 1)
                     continue
 
-                first_slot_var = vars_for_day[FIRST_SLOT_INDEX]
                 error_msg = f"First slot required on {day_obj.value} for {class_name} - {subject_name} ({teacher_name})"
                 slack = self._create_slack(
                     name="assignment first slot required",
@@ -903,7 +1092,10 @@ class TimeTableGenerator:
                     weight=250,
                     upper_bound=1,
                 )
-                self.model.add(first_slot_var + slack >= 1)
+                if first_slot_var is None:
+                    self.model.add(slack == 1)
+                else:
+                    self.model.add(first_slot_var + slack >= 1)
 
     def _apply_class_constraints(self) -> None:
         self._minimize_gaps(label="classes", weight=3)
@@ -925,11 +1117,23 @@ class TimeTableGenerator:
         self._subject_min_per_week()
         self._subject_max_consecutive()
         self._subject_min_consecutive()
+        self._subject_fixed_slots()
         self._subject_morning_tendency()
         self._subject_slot_variety(weight=2)
 
     def _apply_teacher_assignment_constraints(self) -> None:
         self._teacher_assignment_first_slot_days()
+
+    def _all_assignment_vars(self) -> list[cp_model.IntVar]:
+        # Deduplicate co-scheduled variables by id so shared variables aren't weighted multiple times
+        # unnecessarily or hinted redundantly, wait: preserve original weighting for backward-compat
+        # with _build_and_apply_all_constraints tests.
+        return [
+            var
+            for day_vars in self.assignment_schedule.values()
+            for slot_vars in day_vars.values()
+            for var in slot_vars.values()
+        ]
 
     def _apply_minimization(self):
         objective_terms = []
@@ -939,27 +1143,44 @@ class TimeTableGenerator:
 
         objective_terms.extend(self.silent_minimization)
 
-        all_assignment_schedule = [
-            var
-            for day_vars in self.assignment_schedule.values()
-            for slot_vars in day_vars.values()
-            for var in slot_vars.values()
-        ]
-
-        if all_assignment_schedule:
-            objective_terms.append(
-                -self.ASSIGNMENT_WEIGHT * sum(all_assignment_schedule)
+        if self._hard_mode:
+            co_group_counts: dict = collections.Counter(
+                self.assignment_co_group[a.id] for a in self.assignments
             )
+            cs_counts: dict = collections.Counter(
+                (a.class_id, a.subject_id) for a in self.assignments
+            )
+            flexible_vars: list[cp_model.IntVar] = []
+            for a in self.assignments:
+                s_c = self.subjects_dict[a.subject_id].constraints
+                is_fixed = (
+                    s_c.min_per_week == s_c.max_per_week
+                    and co_group_counts[self.assignment_co_group[a.id]] == 1
+                    and cs_counts[(a.class_id, a.subject_id)] == 1
+                )
+                if is_fixed:
+                    continue
+                for day_vars in self.assignment_schedule.get(a.id, {}).values():
+                    flexible_vars.extend(day_vars.values())
+            if flexible_vars:
+                objective_terms.append(-self.ASSIGNMENT_WEIGHT * sum(flexible_vars))
+        else:
+            all_assignment_schedule = self._all_assignment_vars()
+            if all_assignment_schedule:
+                objective_terms.append(
+                    -self.ASSIGNMENT_WEIGHT * sum(all_assignment_schedule)
+                )
 
         if not objective_terms:
             return
 
         self.model.minimize(sum(objective_terms))
 
-    def _build_and_apply_all_constraints(self) -> None:
+    def _build_and_apply_all_constraints(self, *, hard: bool = False) -> None:
         if self._built:
             return
 
+        self._hard_mode = hard
         self._create_and_apply_variables()
         self._apply_hints_vars()
         self._apply_generic_conditions()
@@ -1036,34 +1257,18 @@ class TimeTableGenerator:
         )
         return timetable_entries
     
-    def solve(
+    def _run_solver(
         self,
-        time_limit_sec: float = 60,
-        seed: int = 42,
-        workers: int = 8,
         *,
-        fast: bool = False,
-        gap_limit: float | None = None,
-        patience: float = 5,
-    ) -> GeneratedResponse:
-        if not self.assignments:
-            return GeneratedResponse(
-                success=True,
-                entries=[],
-                violations=[],
-                break_slots=self.break_slots,
-            )
-
-        if not self._built:
-            self._build_and_apply_all_constraints()
-            self._built = True
-
+        time_limit_sec: float,
+        seed: int,
+        workers: int,
+        gap_limit: float | None,
+        patience: float,
+        no_solution_timeout: float | None = None,
+        cancel_event: threading.Event | None = None,
+    ) -> tuple[cp_model.CpSolver, int]:
         solver = cp_model.CpSolver()
-        if fast:
-            # A short, bounded polish finds a usable timetable in seconds;
-            # stopping at the literal first feasible assignment would leave
-            # most periods empty, so cap the budget instead.
-            time_limit_sec = min(float(time_limit_sec), 5.0)
         solver.parameters.max_time_in_seconds = max(0.01, float(time_limit_sec))
         # CP-SAT is only deterministic with a single worker; more workers trade
         # exact reproducibility for speed on large problems.
@@ -1074,8 +1279,13 @@ class TimeTableGenerator:
             solver.parameters.relative_gap_limit = max(0.0, float(gap_limit))
 
         stopper = None
-        if not fast and patience > 0:
-            stopper = _PlateauStopper(solver, float(patience))
+        if patience > 0 or no_solution_timeout is not None or cancel_event is not None:
+            stopper = _PlateauStopper(
+                solver,
+                float(patience),
+                no_solution_timeout=no_solution_timeout,
+                cancel_event=cancel_event,
+            )
 
         try:
             status = solver.solve(self.model, stopper)
@@ -1083,6 +1293,9 @@ class TimeTableGenerator:
             if stopper is not None:
                 stopper.close()
 
+        return solver, status
+
+    def _build_response(self, solver: cp_model.CpSolver, status: int) -> GeneratedResponse:
         if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
             return GeneratedResponse(
                 success=False,
@@ -1098,7 +1311,7 @@ class TimeTableGenerator:
                 ],
                 break_slots=self.break_slots,
             )
-        
+
         timetable_entries = self._fetch_timetable_entries(solver=solver)
         error_slacks = self._fetch_error_slacks(solver=solver)
 
@@ -1128,6 +1341,135 @@ class TimeTableGenerator:
             violations=error_slacks,
             break_slots=self.break_slots,
         )
+
+    def solve(
+        self,
+        time_limit_sec: float = 60,
+        seed: int = 42,
+        workers: int = 8,
+        *,
+        fast: bool = False,
+        gap_limit: float | None = None,
+        patience: float = 5,
+        strict: bool = False,
+        on_phase: Callable[[str, str], None] | None = None,
+        cancel_event: threading.Event | None = None,
+    ) -> GeneratedResponse:
+        def _cancelled_response() -> GeneratedResponse:
+            return GeneratedResponse(
+                success=False,
+                entries=[],
+                violations=[
+                    ViolationOut(error_msg="Solving cancelled by user", val=1)
+                ],
+                break_slots=self.break_slots,
+            )
+
+        if cancel_event is not None and cancel_event.is_set():
+            return _cancelled_response()
+
+        if not self.assignments:
+            return GeneratedResponse(
+                success=True,
+                entries=[],
+                violations=[],
+                break_slots=self.break_slots,
+            )
+
+        total_budget = min(float(time_limit_sec), 5.0) if fast else float(time_limit_sec)
+        total_budget = max(0.01, total_budget)
+        effective_patience = 0.0 if fast else max(0.0, float(patience))
+
+        # Preserve caller-built models untouched when _build_and_apply_all_constraints()
+        # was invoked directly prior to solve().
+        if self._built:
+            if on_phase is not None:
+                on_phase("solve", "Solving timetable with CP-SAT…")
+            solver, status = self._run_solver(
+                time_limit_sec=total_budget,
+                seed=seed,
+                workers=workers,
+                gap_limit=gap_limit,
+                patience=effective_patience,
+                cancel_event=cancel_event,
+            )
+            if cancel_event is not None and cancel_event.is_set():
+                return _cancelled_response()
+            return self._build_response(solver, status)
+
+        deadline = time.monotonic() + total_budget
+
+        # Phase 1: Solve with hard structural constraints (no structural slack variables).
+        if on_phase is not None:
+            msg = (
+                "Solving with strict constraints…"
+                if strict
+                else "Phase 1/2: Solving with hard constraints…"
+            )
+            on_phase("hard", msg)
+
+        self._build_and_apply_all_constraints(hard=True)
+        if cancel_event is not None and cancel_event.is_set():
+            return _cancelled_response()
+
+        if not self._hard_impossible:
+            no_sol_limit = None if strict else min(max(0.4, total_budget * 0.25), 2.5)
+            solver, status = self._run_solver(
+                time_limit_sec=total_budget,
+                seed=seed,
+                workers=workers,
+                gap_limit=gap_limit,
+                patience=effective_patience,
+                no_solution_timeout=no_sol_limit,
+                cancel_event=cancel_event,
+            )
+            if cancel_event is not None and cancel_event.is_set():
+                return _cancelled_response()
+            if status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+                response = self._build_response(solver, status)
+                if response.success:
+                    return response
+            if strict:
+                return self._build_response(solver, status)
+        elif strict:
+            return GeneratedResponse(
+                success=False,
+                entries=[],
+                violations=[
+                    ViolationOut(
+                        error_msg="Solver did not find a feasible timetable (INFEASIBLE)",
+                        val=1,
+                    )
+                ],
+                break_slots=self.break_slots,
+            )
+
+        if cancel_event is not None and cancel_event.is_set():
+            return _cancelled_response()
+
+        # Phase 2: Automatic fallback to soft slack model for diagnostics & best-effort schedule.
+        if on_phase is not None:
+            on_phase(
+                "soft",
+                "Phase 2/2: Hard constraints infeasible — softening constraints (violations may appear)…",
+            )
+        remaining = max(0.2, deadline - time.monotonic())
+        self._reset_build_state()
+        self._build_and_apply_all_constraints(hard=False)
+        if cancel_event is not None and cancel_event.is_set():
+            return _cancelled_response()
+
+        solver, status = self._run_solver(
+            time_limit_sec=remaining,
+            seed=seed,
+            workers=workers,
+            gap_limit=gap_limit,
+            patience=effective_patience,
+            cancel_event=cancel_event,
+        )
+        if cancel_event is not None and cancel_event.is_set():
+            return _cancelled_response()
+        return self._build_response(solver, status)
         
 
 

@@ -304,6 +304,20 @@ class ProjectCrossReferenceTests(unittest.TestCase):
             TimeTableGenerationInput.model_validate(data.model_dump())
         self.assertIn("not a project day", str(ctx.exception))
 
+        # subject fixed_slots on inactive day / break slot
+        data = _make_base_project()
+        data.subjects[0].constraints.fixed_slots = [DaySlot(day=WeekDay.Sat, slot=1)]
+        with self.assertRaises(ValidationError) as ctx:
+            TimeTableGenerationInput.model_validate(data.model_dump())
+        self.assertIn("not a project day", str(ctx.exception))
+
+        data = _make_base_project()
+        data.project.break_slots = [2]
+        data.subjects[0].constraints.fixed_slots = [DaySlot(day=WeekDay.Mon, slot=2)]
+        with self.assertRaises(ValidationError) as ctx:
+            TimeTableGenerationInput.model_validate(data.model_dump())
+        self.assertIn("is a project break slot", str(ctx.exception))
+
     def test_class_weekly_requirements_counts_co_scheduled_tracks_once(self):
         data = _make_base_project()
         lab1 = RoomInput(name="Lab 1", is_lab=True)

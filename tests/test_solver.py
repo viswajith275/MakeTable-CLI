@@ -159,6 +159,28 @@ class SolverConstraintTests(unittest.TestCase):
         self.assertTrue(blocked.success)
         self.assertTrue(any("First slot required on Mon" in v.error_msg for v in blocked.violations))
 
+    def test_subject_fixed_slots_satisfied_and_violation_when_blocked(self):
+        data = _solver_fixture()
+        data.subjects[0].constraints.fixed_slots = [
+            DaySlot(day=WeekDay.Tue, slot=3),
+            DaySlot(day=WeekDay.Tue, slot=4),
+        ]
+        resp = generate(data, time_limit_sec=4, workers=1)
+        self.assertTrue(resp.success)
+        tue_slots = {e.slot for e in resp.entries if e.day == WeekDay.Tue}
+        self.assertIn(3, tue_slots)
+        self.assertIn(4, tue_slots)
+
+        # Blocking the teacher at a fixed slot must surface a violation
+        data.teachers[0].constraints.unavailable_slots = [
+            DaySlot(day=WeekDay.Tue, slot=3)
+        ]
+        blocked = generate(data, time_limit_sec=4, workers=1)
+        self.assertTrue(blocked.success)
+        self.assertTrue(
+            any("Fixed slot Tue:3" in v.error_msg for v in blocked.violations)
+        )
+
     def test_subject_min_and_max_consecutive_and_morning_tendency(self):
         # min_consecutive = 2 forces 2 consecutive periods when scheduled
         room = RoomInput(name="R1")

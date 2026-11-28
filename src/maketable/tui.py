@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 import math
 from pathlib import Path
 import textwrap
+import threading
 from typing import Any, Callable
 from uuid import UUID, uuid4
 
@@ -82,6 +83,7 @@ ENTITY_TABS = [
             "Min/week",
             "Max cons",
             "Min cons",
+            "Fixed slots",
         ],
     ),
     (
@@ -234,10 +236,14 @@ class FormScreen(ModalScreen[dict[str, Any] | None]):
                     values[item.key] = None
                     continue
                 try:
-                    values[item.key] = int(raw) if item.kind == "int" else float(raw)
+                    parsed = int(raw) if item.kind == "int" else float(raw)
                 except ValueError:
                     self.notify(f"{item.label} must be a number.", severity="error")
                     return
+                if item.kind == "number" and not math.isfinite(parsed):
+                    self.notify(f"{item.label} must be a finite number.", severity="error")
+                    return
+                values[item.key] = parsed
             elif item.kind == "bool":
                 values[item.key] = widget.value
             elif item.kind == "select":
@@ -368,7 +374,7 @@ MakeTable generates optimized school timetables using OR-Tools CP-SAT.
 1. **Rooms**: Add classrooms and labs. Specify simultaneous class capacity.
 2. **Classes**: Add classes and assign their default home room.
 3. **Teachers**: Add teaching staff with daily, weekly, and consecutive limits, unavailable/avoided slots, and max working days.
-4. **Subjects**: Define subjects with morning tendencies and weekly/daily requirements.
+4. **Subjects**: Define subjects with morning tendencies, weekly/daily requirements, and optional fixed day/slot pins (e.g. `Tue:6-8, Thu:6-8`).
 5. **Assignments**: Map class + teacher + subject, optional batch/track tag, target room, period block length, co-scheduling (merged lectures or split batches), and first-slot days.
 6. **Timetable**: Set **Time**, **Seed**, **Workers**, **Gap**, and **Patience**, then press **Generate** (or `Ctrl+G` / `Enter` in an option field). **Fast** caps the solve at 5 seconds for a quick preview; **Hint** reuses the previous result as a warm start. **Gap** is a relative fraction (`0.02` = 2%, blank = off); **Patience** is seconds without improvement before stopping (`0` disables).
 7. **Inspect & Export**: Toggle between **Class Schedule**, **Teacher Schedule**, **Room Schedule**, and **All Entries**, then click **Export CSV** or **Export JSON**.
@@ -516,6 +522,7 @@ class TimetablePane(Vertical):
 
         with Horizontal(classes="action-bar tt-actions"):
             yield Button("Generate (Ctrl+G)", id="generate", variant="primary", compact=True)
+            yield Button("Cancel Solve", id="cancel-solve", variant="error", compact=True, disabled=True)
             yield Button("Export CSV", id="export-csv", compact=True)
             yield Button("Export JSON", id="export-json", compact=True)
 
@@ -552,6 +559,7 @@ class TimetableApp(App):
     .action-bar.entity-bar { padding: 1 0; }
     .action-bar Button { width: 16; min-width: 16; height: 1; margin-right: 1; }
     .action-bar.tt-actions Button { width: 19; min-width: 19; }
+    #cancel-solve { display: none; }
     .toolbar-row { height: auto; padding: 0 0 1 0; align: left middle; }
     .toolbar-row.tight-row { padding: 0; }
     .toolbar-row Label { margin: 0 1 0 0; }
@@ -617,7 +625,7 @@ class TimetableApp(App):
 
     def __init__(self, path: Path | None = None):
         super().__init__()
-        self.path = path
+        self.path = path.expanduser() if path is not None else None
         self.data = TimeTableGenerationInput()
         self.dirty = False
         self.response: GeneratedResponse | None = None
@@ -627,6 +635,8 @@ class TimetableApp(App):
         # Bumped on every data change so a result solved from an older snapshot
         # can be marked stale instead of silently presented as current.
         self._revision = 0
+        self._solve_run_id = 0
+        self._solve_cancel_event: threading.Event | None = None
 
     # -- layout -------------------------------------------------------------
 
@@ -654,7 +664,7 @@ class TimetableApp(App):
 
     # -- loading and saving -------------------------------------------------
 
-    def _load_path(self, path: Path) -> None:
+    def _load_path(self, path: Path) -> bool:
         path = path.expanduser()
         try:
             data = TimeTableGenerationInput.model_validate_json(path.read_text(encoding="utf-8"))
@@ -665,16 +675,20 @@ class TimetableApp(App):
                 severity="error",
                 timeout=10,
             )
-            return
+            return False
+        self._abort_active_solve()
         self.data = data
         self.path = path
         self.dirty = False
         self._revision += 1
         self.response = None
         self.response_stale = False
+        self._table_search = {kind: "" for kind in self._table_search}
+        self._clear_search_inputs()
         self._sync_timetable_selectors()
         self.notify(f"Opened {path}", timeout=3)
         self.call_after_refresh(self._refresh_all)
+        return True
 
     def _save_path(self, path: Path) -> None:
         path = path.expanduser()
@@ -951,6 +965,14 @@ class TimetableApp(App):
                 Field("min_per_week", "Min per week", "int", default=0),
                 Field("max_consecutive", "Max consecutive", "int", default=2),
                 Field("min_consecutive", "Min consecutive", "int", default=0),
+                Field(
+                    "fixed_slots",
+                    "Fixed slots (always scheduled)",
+                    "text",
+                    default="",
+                    required=False,
+                    help="e.g. Tue:6-8, Thu:6-8 (day:slot ranges)",
+                ),
             ]
         if kind == "assignment":
             class_map = {c.id: c.name for c in self.data.classes}
@@ -1068,6 +1090,7 @@ class TimetableApp(App):
                 "min_per_week": entity.constraints.min_per_week,
                 "max_consecutive": entity.constraints.max_consecutive,
                 "min_consecutive": entity.constraints.min_consecutive,
+                "fixed_slots": format_day_slots(entity.constraints.fixed_slots),
             }
         if kind == "assignment":
             return {
@@ -1133,6 +1156,7 @@ class TimetableApp(App):
                     min_per_week=values["min_per_week"],
                     max_consecutive=values["max_consecutive"],
                     min_consecutive=values["min_consecutive"],
+                    fixed_slots=parse_day_slots(values.get("fixed_slots", "")),
                 ),
             )
         if kind == "assignment":
@@ -1488,12 +1512,15 @@ class TimetableApp(App):
 
     def _new(self) -> None:
         def reset() -> None:
+            self._abort_active_solve()
             self.data = TimeTableGenerationInput()
             self.path = None
             self.dirty = True
             self._revision += 1
             self.response = None
             self.response_stale = False
+            self._table_search = {kind: "" for kind in self._table_search}
+            self._clear_search_inputs()
             self._sync_timetable_selectors()
             self._refresh_all()
             self.notify("Started a new project.", timeout=3)
@@ -1514,8 +1541,8 @@ class TimetableApp(App):
             ]
             for p in sample_candidates:
                 if p.exists():
-                    self._load_path(p)
-                    self.notify("Loaded sample project.", timeout=4)
+                    if self._load_path(p):
+                        self.notify("Loaded sample project.", timeout=4)
                     return
             self.notify("Sample file (test_json.json) not found.", severity="error")
 
@@ -1567,13 +1594,17 @@ class TimetableApp(App):
         self.push_screen(HelpScreen())
 
     def action_quit_app(self) -> None:
+        def do_quit() -> None:
+            self._abort_active_solve()
+            self.exit()
+
         if self.dirty:
             self.push_screen(
                 ConfirmScreen("Discard unsaved changes and quit?", "Quit"),
-                lambda confirmed: self.exit() if confirmed else None,
+                lambda confirmed: do_quit() if confirmed else None,
             )
         else:
-            self.exit()
+            do_quit()
 
     def action_quit(self) -> None:
         self.action_quit_app()
@@ -1656,11 +1687,55 @@ class TimetableApp(App):
         )
         data = self.data.model_copy(deep=True)
         revision = self._revision
-        self.query_one("#generate", Button).disabled = True
-        self.query_one("#status", Static).update("[yellow]Solving timetable with CP-SAT…[/yellow]")
-        self._solve_worker(
-            data, time_limit, seed, workers, hint, fast, gap_limit, patience, revision
+        self._solve_run_id += 1
+        run_id = self._solve_run_id
+        cancel_event = threading.Event()
+        self._solve_cancel_event = cancel_event
+        self._set_solving_ui(True)
+        self.query_one("#status", Static).update(
+            "[yellow]Phase 1/2: Solving with hard constraints…[/yellow]"
         )
+        self.query_one("#tt-summary", Static).update(
+            "[yellow]Phase 1/2: Solving with hard constraints…[/yellow]"
+        )
+        self._solve_worker(
+            data,
+            time_limit,
+            seed,
+            workers,
+            hint,
+            fast,
+            gap_limit,
+            patience,
+            revision,
+            run_id,
+            cancel_event,
+        )
+
+    def _set_solving_ui(self, solving: bool) -> None:
+        if not self.is_mounted:
+            return
+        gen_btn = self.query_one("#generate", Button)
+        cancel_btn = self.query_one("#cancel-solve", Button)
+        gen_btn.disabled = solving
+        gen_btn.display = not solving
+        cancel_btn.disabled = not solving
+        cancel_btn.display = solving
+
+    def _abort_active_solve(self) -> None:
+        self._solve_run_id += 1
+        if self._solve_cancel_event is not None:
+            self._solve_cancel_event.set()
+            self._solve_cancel_event = None
+        self._set_solving_ui(False)
+
+    def _cancel_solve(self) -> None:
+        if self._solve_cancel_event is None or self._solve_cancel_event.is_set():
+            return
+        self._solve_cancel_event.set()
+        self.query_one("#cancel-solve", Button).disabled = True
+        self.query_one("#status", Static).update("[yellow]Cancelling solve…[/yellow]")
+        self.query_one("#tt-summary", Static).update("[yellow]Cancelling solve…[/yellow]")
 
     @work(thread=True, exclusive=True, group="solve")
     def _solve_worker(
@@ -1674,6 +1749,8 @@ class TimetableApp(App):
         gap_limit: float | None,
         patience: float,
         revision: int,
+        run_id: int,
+        cancel_event: threading.Event,
     ) -> None:
         try:
             from .solver import TimeTableGenerator
@@ -1685,32 +1762,99 @@ class TimetableApp(App):
                 fast=fast,
                 gap_limit=gap_limit,
                 patience=patience,
+                on_phase=lambda phase, msg: self.call_from_thread(
+                    self._on_solve_phase, phase, msg, run_id, cancel_event
+                ),
+                cancel_event=cancel_event,
             )
         except Exception as error:
-            self.call_from_thread(self._on_solve_error, error)
+            if cancel_event.is_set():
+                self.call_from_thread(self._on_solve_cancelled, run_id)
+            else:
+                self.call_from_thread(self._on_solve_error, error, run_id)
             return
-        self.call_from_thread(self._on_solved, response, revision)
+        if cancel_event.is_set():
+            self.call_from_thread(self._on_solve_cancelled, run_id)
+            return
+        self.call_from_thread(self._on_solved, response, revision, run_id)
 
-    def _on_solve_error(self, error: BaseException) -> None:
-        self.query_one("#generate", Button).disabled = False
+    def _on_solve_phase(
+        self,
+        phase: str,
+        message: str,
+        run_id: int | None = None,
+        cancel_event: threading.Event | None = None,
+    ) -> None:
+        if not self.is_mounted:
+            return
+        if run_id is not None and run_id != self._solve_run_id:
+            return
+        if cancel_event is not None and cancel_event.is_set():
+            return
+        if phase == "soft":
+            self.query_one("#status", Static).update(f"[bold yellow]{message}[/bold yellow]")
+            self.query_one("#tt-summary", Static).update(f"[bold yellow]{message}[/bold yellow]")
+            self.notify(
+                "Hard constraints could not be satisfied; softening constraints (violations may appear).",
+                title="Phase 2: Softening Constraints",
+                severity="warning",
+                timeout=6,
+            )
+        else:
+            self.query_one("#status", Static).update(f"[yellow]{message}[/yellow]")
+            self.query_one("#tt-summary", Static).update(f"[yellow]{message}[/yellow]")
+
+    def _on_solve_cancelled(self, run_id: int | None = None) -> None:
+        if run_id is not None and run_id != self._solve_run_id:
+            return
+        self._solve_cancel_event = None
+        self._set_solving_ui(False)
+        self._refresh_timetable()
+        self._refresh_status()
+        self.notify("Timetable generation cancelled.", timeout=4)
+
+    def _on_solve_error(
+        self, error: BaseException, run_id: int | None = None
+    ) -> None:
+        if run_id is not None and run_id != self._solve_run_id:
+            return
+        self._solve_cancel_event = None
+        self._set_solving_ui(False)
+        self._refresh_timetable()
         self._refresh_status()
         self.push_screen(MessageScreen("Solver failed", format_error(error)))
 
     def _on_solved(
-        self, response: GeneratedResponse, revision: int | None = None
+        self,
+        response: GeneratedResponse,
+        revision: int | None = None,
+        run_id: int | None = None,
     ) -> None:
+        if run_id is not None and run_id != self._solve_run_id:
+            return
+        self._solve_cancel_event = None
         self.response = response
         self.response_stale = revision is not None and revision != self._revision
-        self.query_one("#generate", Button).disabled = False
+        self._set_solving_ui(False)
         self._sync_timetable_selectors()
         self._refresh_timetable()
         self._refresh_status()
+        # Clear focus before switching tabs so a focused widget inside another
+        # tab does not cause TabbedContent to snap back when hidden.
+        self.set_focus(None)
         self.query_one("#tabs", TabbedContent).active = "tab-timetable"
         if response.success:
-            self.notify(
-                f"Generated {len(response.entries)} entries with {len(response.violations)} violation(s).",
-                timeout=5,
-            )
+            if response.violations:
+                self.notify(
+                    f"Generated {len(response.entries)} entries with {len(response.violations)} softened violation(s).",
+                    severity="warning",
+                    timeout=6,
+                )
+            else:
+                self.notify(
+                    f"Generated {len(response.entries)} entries cleanly (0 violations).",
+                    timeout=5,
+                )
         else:
             self.notify(
                 "No feasible timetable was found. Check the violations table.",
@@ -1748,6 +1892,7 @@ class TimetableApp(App):
         )
 
     def _do_export_csv(self, path: Path) -> None:
+        path = path.expanduser()
         if not path.suffix:
             path = path.with_suffix(".csv")
         try:
@@ -1766,6 +1911,7 @@ class TimetableApp(App):
         )
 
     def _do_export_json(self, path: Path) -> None:
+        path = path.expanduser()
         if not path.suffix:
             path = path.with_suffix(".json")
         try:
@@ -1775,6 +1921,17 @@ class TimetableApp(App):
             self.notify(f"Could not export JSON: {err}", severity="error")
 
     # -- rendering ----------------------------------------------------------
+
+    def _clear_search_inputs(self) -> None:
+        if not self.is_mounted:
+            return
+        for kind in self._table_search:
+            inp = self.query_one(f"#filter-{kind}", Input)
+            if inp.value:
+                inp.value = ""
+        tt_filter = self.query_one("#tt-filter", Input)
+        if tt_filter.value:
+            tt_filter.value = ""
 
     def _refresh_all(self) -> None:
         self._refresh_project()
@@ -1884,6 +2041,7 @@ class TimetableApp(App):
                     str(constraints.min_per_week),
                     str(constraints.max_consecutive),
                     str(constraints.min_consecutive),
+                    format_day_slots(constraints.fixed_slots) or "none",
                 ]
                 if filter_text and not any(filter_text in cell.lower() for cell in row_data):
                     continue
@@ -1899,6 +2057,8 @@ class TimetableApp(App):
                 key=lambda item: (
                     classes[item.class_id].name.lower() if item.class_id in classes else "",
                     subjects.get(item.subject_id, "").lower(),
+                    (item.tag or "").lower(),
+                    teachers.get(item.teacher_id, "").lower(),
                 ),
             )
             for assignment in items:
@@ -2097,7 +2257,8 @@ class TimetableApp(App):
             summary = ""
 
         if not self.response.success:
-            summary = "[red]No feasible timetable found.[/red] " + summary
+            entry_info = f" ({total_entries} entries)" if total_entries else ""
+            summary = f"[red]No feasible timetable found.[/red]{entry_info} · {total_violations} violation(s)"
         if self.response_stale:
             summary = (
                 "[yellow]Results are from an earlier project state — "
@@ -2107,7 +2268,7 @@ class TimetableApp(App):
         self.query_one("#tt-summary", Static).update(summary)
 
     def _refresh_status(self) -> None:
-        state = "[yellow]unsaved changes[/yellow]" if self.dirty else "saved"
+        state = "saved" if self.dirty is False and self.path is not None else "[yellow]unsaved changes[/yellow]"
         if self.response_stale:
             state += " · [yellow]stale timetable[/yellow]"
         file_part = str(self.path) if self.path else "untitled"
@@ -2148,6 +2309,9 @@ class TimetableApp(App):
             return
         if button_id == "generate":
             self.action_generate()
+            return
+        if button_id == "cancel-solve":
+            self._cancel_solve()
             return
         if button_id == "export-csv":
             self._export_csv()

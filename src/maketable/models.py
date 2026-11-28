@@ -68,7 +68,12 @@ def parse_day_slots(text: str) -> List[DaySlot]:
         slot_part = slot_part.strip()
         if "-" in slot_part:
             start_s, end_s = slot_part.split("-", 1)
-            start_i, end_i = int(start_s), int(end_s)
+            try:
+                start_i, end_i = int(start_s), int(end_s)
+            except ValueError:
+                raise ValueError(
+                    f"Invalid slot range '{slot_part}' in '{chunk}', expected 'start-end'"
+                ) from None
             if start_i < 1 or end_i < start_i or end_i > MAX_SLOTS_PER_DAY:
                 raise ValueError(
                     f"Slot range in '{chunk}' must be within 1..{MAX_SLOTS_PER_DAY}"
@@ -76,13 +81,25 @@ def parse_day_slots(text: str) -> List[DaySlot]:
             for s in range(start_i, end_i + 1):
                 results.append(DaySlot(day=matching_day, slot=s))
         else:
-            slot_number = int(slot_part)
+            try:
+                slot_number = int(slot_part)
+            except ValueError:
+                raise ValueError(
+                    f"Invalid slot '{slot_part}' in '{chunk}', expected an integer"
+                ) from None
             if not 1 <= slot_number <= MAX_SLOTS_PER_DAY:
                 raise ValueError(
                     f"Slot in '{chunk}' must be within 1..{MAX_SLOTS_PER_DAY}"
                 )
             results.append(DaySlot(day=matching_day, slot=slot_number))
-    return results
+    deduped: List[DaySlot] = []
+    seen_slots: set[tuple[WeekDay, int]] = set()
+    for item in results:
+        key = (item.day, item.slot)
+        if key not in seen_slots:
+            seen_slots.add(key)
+            deduped.append(item)
+    return deduped
 
 
 def format_day_slots(slots: List[DaySlot]) -> str:
@@ -140,6 +157,8 @@ class SubjectConstraints(BaseModel):
     min_per_week: int = Field(default=0, ge=0)
     max_consecutive: int = Field(default=2, ge=1)
     min_consecutive: int = Field(default=0, ge=0)
+    # Day/slot pairs where this subject must appear for every class that takes it.
+    fixed_slots: List[DaySlot] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def _check_ranges(self) -> "SubjectConstraints":
@@ -472,6 +491,19 @@ class TimeTableGenerationInput(BaseModel):
                     f"subject '{subject.name}' has min_consecutive ({c.min_consecutive}) "
                     f"exceeding project slots per day ({self.project.slots})"
                 )
+            for slot_item in c.fixed_slots:
+                if slot_item.day not in self.project.days:
+                    raise ValueError(
+                        f"subject '{subject.name}' references day '{slot_item.day.value}', which is not a project day"
+                    )
+                if not 1 <= slot_item.slot <= self.project.slots:
+                    raise ValueError(
+                        f"subject '{subject.name}' references slot {slot_item.slot}, outside valid project slots 1..{self.project.slots}"
+                    )
+                if slot_item.slot in self.project.break_slots:
+                    raise ValueError(
+                        f"subject '{subject.name}' fixed slot {slot_item} is a project break slot"
+                    )
 
         room_ids = ids["room"]
         classes_dict = {c.id: c for c in self.classes}
@@ -683,7 +715,7 @@ class GeneratedResponse(BaseModel):
             for s in slots:
                 if s not in grid[day]:
                     grid[day][s] = []
-        return dict(grid)
+        return {day: dict(grid[day]) for day in active_days}
 
     def get_class_grid(
         self, class_name: str, total_slots: int | None = None
