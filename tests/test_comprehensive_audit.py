@@ -754,6 +754,78 @@ class TuiComprehensiveTests(unittest.IsolatedAsyncioTestCase):
             self.assertFalse(gen_btn.disabled)
             self.assertIs(app.response, prev)
 
+    async def test_project_bottom_buttons_spacing_and_non_blocking_notifications(self):
+        from textual.widgets._toast import Toast, ToastHolder
+
+        for size in ((70, 22), (80, 24), (100, 30)):
+            with self.subTest(size=size):
+                app = TimetableApp()
+                async with app.run_test(size=size, notifications=True) as pilot:
+                    await pilot.pause()
+                    status = app.query_one("#status", Static)
+                    for btn_id in ("#open", "#save", "#save-as", "#new"):
+                        btn = app.query_one(btn_id, Button)
+                        self.assertLess(
+                            btn.region.y + btn.region.height,
+                            status.region.y,
+                            f"{btn_id} should have spacing above #status at {size}",
+                        )
+
+                    # Rapid status notifications replace instead of stacking across the UI
+                    app.notify("First notice")
+                    app.notify("Second notice")
+                    await pilot.pause()
+                    toasts = list(app.screen.query(Toast))
+                    self.assertEqual(len(toasts), 1)
+                    self.assertGreaterEqual(toasts[0].region.y, 2)
+                    self.assertLess(toasts[0].region.y + toasts[0].region.height, status.region.y)
+
+                    # Sequential notifications across pauses must prune old ToastHolders
+                    # so subsequent toasts on the main screen never get pushed out of view
+                    for idx in range(5):
+                        app.action_validate()
+                        await pilot.pause()
+                        holders = list(app.screen.query(ToastHolder))
+                        toasts = list(app.screen.query(Toast))
+                        self.assertEqual(len(holders), 1, f"stale ToastHolder left on pass {idx}")
+                        self.assertEqual(len(toasts), 1, f"missing Toast on pass {idx}")
+                        self.assertEqual(toasts[0].region.y, 2, f"toast drifted vertically on pass {idx}")
+                        self.assertTrue(toasts[0].visible)
+
+                    # FormScreen validation toast stays clear of #save button
+                    app.push_screen(FormScreen("Num", [Field("x", "X", "int")], {"x": ""}))
+                    await pilot.pause()
+                    await pilot.click("#save")
+                    await pilot.pause()
+                    save_region = app.screen.query_one("#save", Button).region
+                    form_toasts = list(app.screen.query(Toast))
+                    self.assertEqual(len(form_toasts), 1)
+                    self.assertLess(
+                        form_toasts[0].region.y + form_toasts[0].region.height,
+                        save_region.y,
+                    )
+
+    async def test_clicking_empty_or_out_of_bounds_datatable_headers_does_not_crash(self):
+        from textual.widgets import TabbedContent
+
+        app = TimetableApp()
+        async with app.run_test(size=(100, 30)) as pilot:
+            await pilot.pause()
+            tabs = app.query_one(TabbedContent)
+
+            # Empty timetable table before solving (0 columns, response=None)
+            tabs.active = "tab-timetable"
+            await pilot.pause()
+            await pilot.click("#table-timetable", offset=(1, 0))
+            await pilot.click("#table-timetable", offset=(30, 0))
+            await pilot.pause()
+
+            # Entity table with columns: clicking header right of last column must not crash
+            tabs.active = "tab-room"
+            await pilot.pause()
+            await pilot.click("#table-room", offset=(90, 0))
+            await pilot.pause()
+
 
 if __name__ == "__main__":
     unittest.main()

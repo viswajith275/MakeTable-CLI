@@ -20,6 +20,8 @@ from textual import work
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, VerticalScroll
+from textual.notifications import Notify
+from textual.widgets._toast import ToastHolder, ToastRack
 from textual.screen import ModalScreen
 from textual.widgets import (
     Button,
@@ -261,7 +263,7 @@ class FormScreen(ModalScreen[dict[str, Any] | None]):
         if self.validator is not None:
             err = self.validator(values)
             if err:
-                self.notify(err, title="Validation Error", severity="error", timeout=6)
+                self.notify(err, title="Validation Error", severity="error", timeout=5)
                 return
 
         self.dismiss(values)
@@ -404,6 +406,24 @@ class HelpScreen(ModalScreen[None]):
 # ---------------------------------------------------------------------------
 
 
+class SafeDataTable(DataTable):
+    """DataTable that safely ignores empty-table and out-of-bounds header clicks."""
+
+    async def _on_click(self, event) -> None:
+        meta = event.style.meta
+        if "row" in meta and "column" in meta:
+            row_index = meta["row"]
+            col_index = meta["column"]
+            if not self.ordered_columns:
+                return
+            if row_index == -1 and (
+                meta.get("out_of_bounds", False)
+                or not (0 <= col_index < len(self.ordered_columns))
+            ):
+                return
+        await super()._on_click(event)
+
+
 class EntityPane(Vertical):
     def __init__(self, kind: str, columns: list[str]):
         super().__init__(id=f"pane-{kind}")
@@ -413,7 +433,7 @@ class EntityPane(Vertical):
     def compose(self) -> ComposeResult:
         search_noun = PLURALS[self.kind].replace("teacher_", "")
         yield Input(placeholder=f"Search {search_noun}…", id=f"filter-{self.kind}", classes="table-filter")
-        table = DataTable(id=f"table-{self.kind}", cursor_type="row", zebra_stripes=True)
+        table = SafeDataTable(id=f"table-{self.kind}", cursor_type="row", zebra_stripes=True)
         for column in self.columns:
             table.add_column(column)
         yield table
@@ -527,11 +547,11 @@ class TimetablePane(Vertical):
             yield Button("Export JSON", id="export-json", compact=True)
 
         yield Static(id="tt-summary")
-        table = DataTable(id="table-timetable", cursor_type="row", zebra_stripes=True)
+        table = SafeDataTable(id="table-timetable", cursor_type="row", zebra_stripes=True)
         yield table
 
         yield Static("Violations", id="violations-title", classes="section-title")
-        violations = DataTable(id="table-violations", cursor_type="row", zebra_stripes=True)
+        violations = SafeDataTable(id="table-violations", cursor_type="row", zebra_stripes=True)
         for column in ("Message", "Value"):
             violations.add_column(column)
         yield violations
@@ -555,7 +575,7 @@ class TimetableApp(App):
     Button.-style-default.-textual-compact { background: $surface-lighten-1; color: $text; }
     Button.-style-default.-textual-compact:hover { background: $surface-lighten-2; }
     .action-bar { height: auto; padding: 0 0 1 0; align: left middle; }
-    .action-bar.bottom-row { padding: 0; }
+    .action-bar.bottom-row { padding: 0 0 1 0; }
     .action-bar.entity-bar { padding: 1 0; }
     .action-bar Button { width: 16; min-width: 16; height: 1; margin-right: 1; }
     .action-bar.tt-actions Button { width: 19; min-width: 19; }
@@ -584,6 +604,21 @@ class TimetableApp(App):
     #table-violations { height: 1fr; min-height: 4; max-height: 8; }
     .section-title { text-style: bold; padding-top: 1; }
     #status { height: 1; padding: 0 1; background: $panel; color: $text-muted; }
+    ToastRack {
+        dock: top;
+        align: right top;
+        margin: 2 1 0 0;
+        height: auto;
+        max-height: 8;
+        overflow-y: auto;
+    }
+    Toast {
+        padding: 0 1;
+        margin: 0;
+        width: auto;
+        min-width: 24;
+        max-width: 56;
+    }
 
     FormScreen, ConfirmScreen, MessageScreen, PromptScreen, HelpScreen { align: center middle; }
     #dialog { width: 92%; max-width: 80; min-width: 44; height: 92%; max-height: 36; border: thick $primary; background: $surface; padding: 0 2; }
@@ -664,7 +699,18 @@ class TimetableApp(App):
 
     # -- loading and saving -------------------------------------------------
 
-    def _load_path(self, path: Path) -> bool:
+    def _on_notify(self, event: Notify) -> None:
+        """Keep at most one active toast and prune stale ToastHolders."""
+        self._notifications.clear()
+        try:
+            rack = self.screen.get_child_by_type(ToastRack)
+            for holder in list(rack.query(ToastHolder)):
+                holder.remove()
+        except Exception:
+            pass
+        super()._on_notify(event)
+
+    def _load_path(self, path: Path, *, announce: bool = True) -> bool:
         path = path.expanduser()
         try:
             data = TimeTableGenerationInput.model_validate_json(path.read_text(encoding="utf-8"))
@@ -686,7 +732,8 @@ class TimetableApp(App):
         self._table_search = {kind: "" for kind in self._table_search}
         self._clear_search_inputs()
         self._sync_timetable_selectors()
-        self.notify(f"Opened {path}", timeout=3)
+        if announce:
+            self.notify(f"Opened {path}", timeout=3)
         self.call_after_refresh(self._refresh_all)
         return True
 
@@ -1541,8 +1588,8 @@ class TimetableApp(App):
             ]
             for p in sample_candidates:
                 if p.exists():
-                    if self._load_path(p):
-                        self.notify("Loaded sample project.", timeout=4)
+                    if self._load_path(p, announce=False):
+                        self.notify("Loaded sample project.", timeout=3.5)
                     return
             self.notify("Sample file (test_json.json) not found.", severity="error")
 
@@ -1798,7 +1845,7 @@ class TimetableApp(App):
                 "Hard constraints could not be satisfied; softening constraints (violations may appear).",
                 title="Phase 2: Softening Constraints",
                 severity="warning",
-                timeout=6,
+                timeout=5,
             )
         else:
             self.query_one("#status", Static).update(f"[yellow]{message}[/yellow]")
@@ -1811,7 +1858,7 @@ class TimetableApp(App):
         self._set_solving_ui(False)
         self._refresh_timetable()
         self._refresh_status()
-        self.notify("Timetable generation cancelled.", timeout=4)
+        self.notify("Timetable generation cancelled.", timeout=3.5)
 
     def _on_solve_error(
         self, error: BaseException, run_id: int | None = None
@@ -1848,18 +1895,18 @@ class TimetableApp(App):
                 self.notify(
                     f"Generated {len(response.entries)} entries with {len(response.violations)} softened violation(s).",
                     severity="warning",
-                    timeout=6,
+                    timeout=5,
                 )
             else:
                 self.notify(
                     f"Generated {len(response.entries)} entries cleanly (0 violations).",
-                    timeout=5,
+                    timeout=4,
                 )
         else:
             self.notify(
                 "No feasible timetable was found. Check the violations table.",
                 severity="error",
-                timeout=8,
+                timeout=6,
             )
 
     def _sync_timetable_selectors(self) -> None:
@@ -2128,12 +2175,15 @@ class TimetableApp(App):
 
         if self.response is None:
             table.clear(columns=True)
+            table.show_header = False
             violations_title.display = False
             violations.display = False
             self.query_one("#tt-summary", Static).update(
                 "No timetable generated yet. Press [bold]Generate[/bold] or press [bold]Ctrl+G[/bold]."
             )
             return
+
+        table.show_header = True
 
         total_violations = len(self.response.violations)
         has_violations = total_violations > 0
