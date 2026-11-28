@@ -1,154 +1,141 @@
-<div align="center">
-  <h1>MakeTable</h1>
-  <p><strong>School &amp; department timetable generator powered by Google OR-Tools CP-SAT</strong></p>
-  <p>Ships as an interactive terminal editor (TUI), a scriptable CLI, and an embeddable Python library.</p>
-</div>
+
+# MakeTable
+
+**School & department timetable generator powered by Google OR-Tools CP-SAT**
+
+Interactive terminal UI · Scriptable CLI · Embeddable Python library
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
+[![OR-Tools](https://img.shields.io/badge/solver-OR--Tools%20CP--SAT-orange)](https://developers.google.com/optimization)
+
+
+---
+
+## Why MakeTable?
+
+Building conflict-free school and college timetables by hand is painful.  
+MakeTable turns the problem into a proper constraint satisfaction model and solves it with Google’s battle-tested CP-SAT solver.
+
+You get:
+
+- An interactive **Textual TUI** for building and exploring schedules
+- A fast **CLI** for scripting and CI
+- A clean **Python library** you can embed in your own tools
+
+Real-world features for schools *and* departments: break slots, teacher unavailability, multi-period labs, merged lectures, concurrent split batches, fixed slots, warm starts, and soft-constraint violation reporting.
 
 ---
 
 ## Features
 
-- **Constraint-based scheduling** — Solves schedules with Google OR-Tools CP-SAT while balancing workload and minimizing idle gaps.
-- **Interactive TUI** — Manage projects, rooms, classes, teachers, subjects, and assignments with real-time feasibility checks and weekly grid views.
-- **Flexible CLI** — Validate inputs, inspect the JSON Schema, and output schedules as rich terminal tables, JSON, or formula-safe CSV.
-- **Validation guard rails** — Catches duplicate names/IDs, missing references, impossible min/max ranges, over-allocated weekly slots, and break-crossing blocks before solving.
-- **Department &amp; college support** — Universal break slots, teacher unavailable/avoided slots, max working days per week, multi-period atomic lab blocks, merged lectures, concurrent split batches, and fixed subject day/slot pins.
-- **Warm starts** — Reuse a previous schedule JSON as a solver hint for faster re-solving.
+| Area | Capabilities |
+|------|--------------|
+| **Solver** | OR-Tools CP-SAT with hard + soft constraints, workload balancing, gap minimization, morning preference, warm-start hints, early stopping |
+| **TUI** | Full project editor, live feasibility checks, class/teacher/room grid views, background solving, CSV/JSON export |
+| **CLI** | Validate → Generate → Export (table / JSON / formula-safe CSV). Rich terminal output |
+| **Modeling** | Universal break slots · Teacher unavailable/avoid slots · Max working days · Atomic multi-period blocks · Merged lectures · Concurrent split batches · Fixed subject day/slot pins |
+| **Quality** | Pre-solve validation guardrails, soft-constraint violation reports, deterministic mode, seed control |
 
 ---
 
 ## Installation
 
-### Prebuilt Binary (Linux &amp; macOS)
-
-<p>Install the <code>timetable</code> command:</p>
+### Prebuilt Binary (Linux & macOS)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/viswajith275/MakeTable-CLI/main/scripts/install.sh | bash
-```
+# Install
+curl -fsSL https://raw.githubusercontent.com/viswajith275/MakeTable-TUI/main/scripts/install.sh | bash
 
-<p>To uninstall:</p>
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/viswajith275/MakeTable-CLI/main/scripts/uninstall.sh | bash
+# Uninstall
+curl -fsSL https://raw.githubusercontent.com/viswajith275/MakeTable-TUI/main/scripts/uninstall.sh | bash
 ```
 
 ### Prebuilt Binary (Windows PowerShell)
 
-<p>Install the <code>timetable</code> command:</p>
-
 ```powershell
-irm https://raw.githubusercontent.com/viswajith275/MakeTable-CLI/main/scripts/install.ps1 | iex
+# Install
+irm https://raw.githubusercontent.com/viswajith275/MakeTable-TUI/main/scripts/install.ps1 | iex
+
+# Uninstall
+irm https://raw.githubusercontent.com/viswajith275/MakeTable-TUI/main/scripts/uninstall.ps1 | iex
 ```
 
-<p>To uninstall:</p>
-
-```powershell
-irm https://raw.githubusercontent.com/viswajith275/MakeTable-CLI/main/scripts/uninstall.ps1 | iex
-```
+After installation the `timetable` command is available globally.
 
 ### From Source
 
-<p>Requires Python 3.13+.</p>
+Requires **Python 3.13+**.
 
 ```bash
-git clone https://github.com/viswajith275/MakeTable-CLI.git
-cd MakeTable-CLI
+git clone https://github.com/viswajith275/MakeTable-TUI.git
+cd MakeTable-TUI
+
+# With uv (recommended)
 uv sync
-```
+uv run timetable
 
-<p>Or with <code>pip</code>:</p>
-
-```bash
+# Or with pip
 pip install -e .
+timetable
 ```
 
 ---
 
-## How to Use
+## Quick Start
+
+```bash
+# Launch the interactive TUI
+timetable
+
+# Or open / create a project file
+timetable tui school.json
+
+# Validate a project
+timetable validate school.json
+
+# Generate a timetable
+timetable generate school.json
+```
+
+---
+
+## Usage
 
 ### 1. Interactive Terminal Editor (TUI)
 
-<p>Launch the editor directly or pass a project file (new files are created on save):</p>
-
 ```bash
-timetable
-timetable tui school.json
+timetable                  # new project
+timetable tui school.json  # open existing project
 ```
 
-<details>
-<summary><strong>TUI Workflow &amp; Keyboard Shortcuts</strong></summary>
+Work through the tabs from left to right:
 
-<br>
+1. **Project** — Set project name, slots per day (`1..24`), active days, and universal `break_slots`. Use the live *Feasibility* panel to confirm available weekly capacity covers each class’s minimum periods, or click **Load sample** to explore `test_json.json`.
+2. **Rooms** — Define classrooms and labs, including simultaneous class `capacity` for shared halls/auditoriums.
+3. **Classes** — Add classes or sections and assign each one a default home room.
+4. **Teachers** — Configure daily, weekly, and consecutive class limits, optional `max_days_per_week`, hard `unavailable_slots` (e.g. `Mon:1, Wed:3-4`), and soft `avoid_slots`.
+5. **Subjects** — Set `morning_tendency` (`Low`, `Med`, `High`), daily/weekly/consecutive min and max limits, and `fixed_slots` to pin the subject to specific day/slot pairs (e.g. `Tue:6-8, Thu:6-8`).
+6. **Assignments** — Pair a class, teacher, and subject with optional batch/elective `tag`, `target_room_id` override, atomic `period_length`, `co_schedule_with` links, and `first_slot_days`.
+7. **Timetable** — Adjust *Time*, *Seed*, *Workers*, *Gap*, *Patience*, *Fast*, and *Hint*, then generate. Inspect **Class Schedule**, **Teacher Schedule**, **Room Schedule**, or **All Entries**, and export to CSV or JSON.
 
-<p>Work through the tabs from left to right to build a timetable:</p>
+#### Keyboard Shortcuts
 
-<ol>
-  <li><strong>Project</strong> — Set project name, slots per day (<code>1..24</code>), active days, and universal <code>break_slots</code>. Use the live <em>Feasibility</em> panel to confirm available weekly capacity covers each class's minimum periods, or click <strong>Load sample</strong> to explore <code>test_json.json</code>.</li>
-  <li><strong>Rooms</strong> — Define classrooms and labs, including simultaneous class <code>capacity</code> for shared halls/auditoriums.</li>
-  <li><strong>Classes</strong> — Add classes or sections and assign each one a default home room.</li>
-  <li><strong>Teachers</strong> — Configure daily, weekly, and consecutive class limits, optional <code>max_days_per_week</code>, hard <code>unavailable_slots</code> (e.g. <code>Mon:1, Wed:3-4</code>), and soft <code>avoid_slots</code>.</li>
-  <li><strong>Subjects</strong> — Set <code>morning_tendency</code> (<code>Low</code>, <code>Med</code>, <code>High</code>), daily/weekly/consecutive min and max limits, and <code>fixed_slots</code> to pin the subject to specific day/slot pairs (e.g. <code>Tue:6-8, Thu:6-8</code>).</li>
-  <li><strong>Assignments</strong> — Pair a class, teacher, and subject with optional batch/elective <code>tag</code>, <code>target_room_id</code> override, atomic <code>period_length</code>, <code>co_schedule_with</code> links, and <code>first_slot_days</code>.</li>
-  <li><strong>Timetable</strong> — Adjust <em>Time</em>, <em>Seed</em>, <em>Workers</em>, <em>Gap</em>, <em>Patience</em>, <em>Fast</em>, and <em>Hint</em>, then generate. Inspect <strong>Class Schedule</strong>, <strong>Teacher Schedule</strong>, <strong>Room Schedule</strong>, or <strong>All Entries</strong>, and export to CSV or JSON.</li>
-</ol>
+| Shortcut                      | Action                                              |
+|-------------------------------|-----------------------------------------------------|
+| `Ctrl+S` / `Ctrl+Shift+S`     | Save / Save As                                      |
+| `Ctrl+O`                      | Open project JSON                                   |
+| `Ctrl+N`                      | New project                                         |
+| `Ctrl+G`                      | Generate timetable                                  |
+| `F5`                          | Validate project                                    |
+| `?` / `F1`                    | Open help modal                                     |
+| `Ctrl+Q`                      | Quit                                                |
+| `a`                           | Add item in active tab                              |
+| `e` / `Enter`                 | Edit selected row (or Project settings on Project tab) |
+| `c`                           | Duplicate selected row                              |
+| `d` / `Delete`                | Delete selected row (prompts to cascade assignments when referenced) |
 
-<table>
-  <thead>
-    <tr>
-      <th>Shortcut</th>
-      <th>Action</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><kbd>Ctrl</kbd>+<kbd>S</kbd> / <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd></td>
-      <td>Save / Save As</td>
-    </tr>
-    <tr>
-      <td><kbd>Ctrl</kbd>+<kbd>O</kbd></td>
-      <td>Open project JSON</td>
-    </tr>
-    <tr>
-      <td><kbd>Ctrl</kbd>+<kbd>N</kbd></td>
-      <td>New project</td>
-    </tr>
-    <tr>
-      <td><kbd>Ctrl</kbd>+<kbd>G</kbd></td>
-      <td>Generate timetable</td>
-    </tr>
-    <tr>
-      <td><kbd>F5</kbd></td>
-      <td>Validate project</td>
-    </tr>
-    <tr>
-      <td><kbd>?</kbd> / <kbd>F1</kbd></td>
-      <td>Open help modal</td>
-    </tr>
-    <tr>
-      <td><kbd>Ctrl</kbd>+<kbd>Q</kbd></td>
-      <td>Quit</td>
-    </tr>
-    <tr>
-      <td><kbd>a</kbd></td>
-      <td>Add item in active tab</td>
-    </tr>
-    <tr>
-      <td><kbd>e</kbd> / <kbd>Enter</kbd></td>
-      <td>Edit selected row (or Project settings on Project tab)</td>
-    </tr>
-    <tr>
-      <td><kbd>c</kbd></td>
-      <td>Duplicate selected row</td>
-    </tr>
-    <tr>
-      <td><kbd>d</kbd> / <kbd>Delete</kbd></td>
-      <td>Delete selected row (prompts to cascade assignments when referenced)</td>
-    </tr>
-  </tbody>
-</table>
-
-</details>
+---
 
 ### 2. Command-Line Interface (CLI)
 
@@ -169,61 +156,22 @@ timetable generate school.json --previous-hint result.json
 timetable schema
 ```
 
-<details>
-<summary><strong>CLI Options &amp; Usage Recipes</strong></summary>
+#### CLI Options
 
-<br>
+| Option                        | Description |
+|-------------------------------|-------------|
+| `-o, --output PATH`           | Output file (omit to print to stdout) |
+| `-f, --format json\|table\|csv` | Output format (defaults to the `--output` extension, else `table`) |
+| `-t, --time-limit SECONDS`    | Maximum solver time in seconds (default `60`) |
+| `-s, --seed INT`              | Random seed (default `42`) |
+| `-w, --workers INT`           | Solver threads (default `8`; use `1` for deterministic runs) |
+| `--fast`                      | Quick preview capped at 5 seconds |
+| `--gap-limit FLOAT`           | Stop once within this relative optimality gap (e.g. `0.02` = 2%) |
+| `--patience SECONDS`          | Stop after this many seconds without improvement (default `5`; `0` disables) |
+| `--previous-hint PATH`        | Warm-start from a previous JSON result |
+| `--violations` / `--no-violations` | Include or hide the soft-constraint violation report (default on) |
 
-<table>
-  <thead>
-    <tr>
-      <th>Option</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code>-o, --output PATH</code></td>
-      <td>Output file (omit to print to stdout)</td>
-    </tr>
-    <tr>
-      <td><code>-f, --format json|table|csv</code></td>
-      <td>Output format (defaults to the <code>--output</code> extension, else <code>table</code>)</td>
-    </tr>
-    <tr>
-      <td><code>-t, --time-limit SECONDS</code></td>
-      <td>Maximum solver time in seconds (default <code>60</code>)</td>
-    </tr>
-    <tr>
-      <td><code>-s, --seed INT</code></td>
-      <td>Random seed (default <code>42</code>)</td>
-    </tr>
-    <tr>
-      <td><code>-w, --workers INT</code></td>
-      <td>Solver threads (default <code>8</code>; use <code>1</code> for deterministic runs)</td>
-    </tr>
-    <tr>
-      <td><code>--fast</code></td>
-      <td>Quick preview capped at 5 seconds</td>
-    </tr>
-    <tr>
-      <td><code>--gap-limit FLOAT</code></td>
-      <td>Stop once within this relative optimality gap (e.g. <code>0.02</code> = 2%)</td>
-    </tr>
-    <tr>
-      <td><code>--patience SECONDS</code></td>
-      <td>Stop after this many seconds without improvement (default <code>5</code>; <code>0</code> disables)</td>
-    </tr>
-    <tr>
-      <td><code>--previous-hint PATH</code></td>
-      <td>Warm-start from a previous JSON result</td>
-    </tr>
-    <tr>
-      <td><code>--violations / --no-violations</code></td>
-      <td>Include or hide the soft-constraint violation report (default on)</td>
-    </tr>
-  </tbody>
-</table>
+#### Common Recipes
 
 ```bash
 # Quick 5-second preview
@@ -240,16 +188,11 @@ timetable generate school.json -o schedule.csv --no-violations
 timetable generate school.json --previous-hint result.json -t 180 --patience 0 -o result_v2.json
 ```
 
-</details>
+---
 
-### 3. Input Format &amp; Modeling Patterns
+### 3. Input Format & Modeling Patterns
 
-<details>
-<summary><strong>JSON Structure, Constraints &amp; Co-Scheduling Patterns</strong></summary>
-
-<br>
-
-<p>Input files match <code>TimeTableGenerationInput</code> (<code>id</code> fields are optional and default to a generated UUID):</p>
+Input files match `TimeTableGenerationInput` (`id` fields are optional and default to a generated UUID):
 
 ```json
 {
@@ -314,21 +257,16 @@ timetable generate school.json --previous-hint result.json -t 180 --patience 0 -
 }
 ```
 
-<ul>
-  <li><strong>Merged lectures (across classes)</strong> — Create one assignment per class with the same teacher, subject, and <code>target_room_id</code> (room <code>capacity &gt;= 2</code>), and link their IDs in <code>co_schedule_with</code>.</li>
-  <li><strong>Concurrent split batches (within a class)</strong> — Create two assignments on the same class with distinct <code>tag</code> values (e.g. <code>"Batch 1"</code>, <code>"Batch 2"</code>), separate teachers and rooms, and link them via <code>co_schedule_with</code>.</li>
-  <li><strong>Atomic lab blocks</strong> — Set <code>period_length</code> &gt; <code>1</code>; blocks are scheduled contiguously and never cross <code>break_slots</code>.</li>
-  <li><strong>Fixed subject slots</strong> — Add <code>fixed_slots</code> to a subject to pin it to specific day/slot pairs for every class that takes it (e.g. minor courses on <code>Tue:6-8</code> and <code>Thu:6-8</code>; list the whole block for multi-period assignments). The TUI accepts ranges like <code>Tue:6-8, Thu:6-8</code>.</li>
-</ul>
+#### Modeling Patterns
 
-</details>
+- **Merged lectures (across classes)** — Create one assignment per class with the same teacher, subject, and `target_room_id` (room `capacity >= 2`), and link their IDs in `co_schedule_with`.
+- **Concurrent split batches (within a class)** — Create two assignments on the same class with distinct `tag` values (e.g. `"Batch 1"`, `"Batch 2"`), separate teachers and rooms, and link them via `co_schedule_with`.
+- **Atomic lab blocks** — Set `period_length > 1`; blocks are scheduled contiguously and never cross `break_slots`.
+- **Fixed subject slots** — Add `fixed_slots` to a subject to pin it to specific day/slot pairs for every class that takes it (e.g. minor courses on `Tue:6-8` and `Thu:6-8`; list the whole block for multi-period assignments). The TUI accepts ranges like `Tue:6-8, Thu:6-8`.
+
+---
 
 ### 4. Embedding as a Python Library
-
-<details>
-<summary><strong>Python API Examples (<code>generate</code>, <code>validate_project</code>, Grids &amp; CSV)</strong></summary>
-
-<br>
 
 ```python
 from pathlib import Path
@@ -377,65 +315,39 @@ generator = TimeTableGenerator(RawData=data, HintData=response)
 refined = generator.solve(time_limit_sec=60, seed=42, workers=8)
 ```
 
-</details>
+---
+
+## Architecture
+
+MakeTable is built in Python 3.13 around four focused modules:
+
+| Module              | Role |
+|---------------------|------|
+| `src/maketable/models.py` | Pydantic v2 data models, cross-reference validators, feasibility calculations, grid builders, and CSV export |
+| `src/maketable/solver.py` | OR-Tools CP-SAT constraint model, slack tracking, greedy & warm-start hinting, and stagnation-based early stopping |
+| `src/maketable/cli.py`    | Typer CLI with Rich formatted timetable tables, CSV/JSON output, and schema inspection |
+| `src/maketable/tui.py`    | Textual interactive terminal UI with modal validation guard rails, search filters, background solving, and grid views |
+
+### Inside the CP-SAT Solver
+
+- **Co-scheduled variable sharing** — Linked assignments (via `co_schedule_with`) are grouped with union-find so every member of a group shares a single boolean decision grid per day and slot.
+- **Atomic multi-period blocks** — When `period_length > 1`, decision variables represent valid contiguous start slots that never cross `break_slots`.
+- **Hard constraints** — At most one non-co-scheduled period per class and per teacher in any slot, room capacity limits, universal break slots fixed to zero, and teacher unavailable slots fixed to zero.
+- **Soft constraints with slack reporting** — Teacher limits, subject min/max rules, assignment `first_slot_days`, and subject `fixed_slots` use bounded slack variables weighted in the objective.
+- **Silent quality objectives** — Penalize idle gaps, balance daily teacher loads, reward `morning_tendency`, and encourage slot variety.
+- **Hinting & early stopping** — Lightweight greedy pass seeds conflict-free initial hints. A plateau stopper halts solving once the objective stops improving for `patience` seconds.
 
 ---
 
-## How It's Made
-
-<p>MakeTable is built in Python 3.13 around four focused modules:</p>
-
-<table>
-  <thead>
-    <tr>
-      <th>Module</th>
-      <th>Role</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code>src/maketable/models.py</code></td>
-      <td>Pydantic v2 data models, cross-reference validators, feasibility calculations, grid builders, and CSV export</td>
-    </tr>
-    <tr>
-      <td><code>src/maketable/solver.py</code></td>
-      <td>OR-Tools CP-SAT constraint model, slack tracking, greedy &amp; warm-start hinting, and stagnation-based early stopping</td>
-    </tr>
-    <tr>
-      <td><code>src/maketable/cli.py</code></td>
-      <td>Typer CLI with Rich formatted timetable tables, CSV/JSON output, and schema inspection</td>
-    </tr>
-    <tr>
-      <td><code>src/maketable/tui.py</code></td>
-      <td>Textual interactive terminal UI with modal validation guard rails, search filters, background solving, and grid views</td>
-    </tr>
-  </tbody>
-</table>
-
-<details>
-<summary><strong>Inside the CP-SAT Solver &amp; Constraint Model</strong></summary>
-
-<br>
-
-<ul>
-  <li><strong>Co-scheduled variable sharing</strong> — Linked assignments (via <code>co_schedule_with</code>) are grouped with union-find so every member of a group shares a single boolean decision grid per day and slot rather than duplicating variables and equality constraints.</li>
-  <li><strong>Atomic multi-period blocks</strong> — When <code>period_length &gt; 1</code>, decision variables represent valid contiguous start slots that never cross <code>break_slots</code>; slot occupancy is derived from overlapping start windows and consecutive starts are constrained with <code>at_most_one</code>.</li>
-  <li><strong>Hard constraints</strong> — At most one non-co-scheduled period per class and per teacher in any slot, room <code>capacity</code> limits per slot, universal <code>break_slots</code> fixed to zero, and teacher <code>unavailable_slots</code> fixed to zero.</li>
-  <li><strong>Soft constraints with slack reporting</strong> — Teacher limits (<code>max_per_day</code>, <code>max_per_week</code>, <code>max_consecutive</code>, <code>max_days_per_week</code>, <code>avoid_slots</code>), subject min/max rules, assignment <code>first_slot_days</code>, and subject <code>fixed_slots</code> use bounded slack variables weighted in the minimization objective so impossible combinations degrade gracefully and surface actionable violation messages.</li>
-  <li><strong>Silent quality objectives</strong> — Linear prefix/suffix occupancy checks penalize idle teacher and class gaps (ignoring break slots), balance daily teacher loads, reward <code>morning_tendency</code>, and encourage slot variety across days.</li>
-  <li><strong>Hinting &amp; early stopping</strong> — When no previous result is supplied, a lightweight greedy pass seeds conflict-free initial hints (prioritizing pinned first-slot classes, multi-period labs, and shared resources). During search, a background <code>_PlateauStopper</code> callback halts solving once the objective stops improving for <code>patience</code> seconds.</li>
-</ul>
-
-</details>
-
----
-
-## Tests
+## Development
 
 ```bash
-.venv/bin/python -m unittest discover -s tests -v
+uv sync
+uv run python -m unittest discover -s tests -v
 ```
+
+---
 
 ## License
 
-MIT
+MIT © [viswajith275](https://github.com/viswajith275)
