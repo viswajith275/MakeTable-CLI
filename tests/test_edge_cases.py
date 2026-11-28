@@ -419,7 +419,8 @@ class CliEdgeCaseTests(unittest.TestCase):
         self.tmp.cleanup()
 
     def test_home_path_expansion_for_input_and_hint(self):
-        with patch.dict(os.environ, {"HOME": str(self.tmp_path)}):
+        env = {"HOME": str(self.tmp_path), "USERPROFILE": str(self.tmp_path)}
+        with patch.dict(os.environ, env):
             validate = self.runner.invoke(cli_app, ["validate", "~/project.json"])
             self.assertEqual(validate.exit_code, 0, validate.output)
 
@@ -609,7 +610,7 @@ class TuiEdgeCaseTests(unittest.IsolatedAsyncioTestCase):
         async with app.run_test() as pilot:
             app.response = one_entry_response()
             with tempfile.TemporaryDirectory() as tmp:
-                with patch.dict(os.environ, {"HOME": tmp}):
+                with patch.dict(os.environ, {"HOME": tmp, "USERPROFILE": tmp}):
                     app._do_export_csv(Path("~/out.csv"))
                     app._do_export_json(Path("~/out.json"))
                 self.assertTrue((Path(tmp) / "out.csv").exists())

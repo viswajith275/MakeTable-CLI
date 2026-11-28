@@ -212,7 +212,7 @@ class ModelsComprehensiveTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             p = Path(tmp) / "proj.json"
             p.write_text(proj.model_dump_json(), encoding="utf-8")
-            with patch.dict(os.environ, {"HOME": tmp}):
+            with patch.dict(os.environ, {"HOME": tmp, "USERPROFILE": tmp}):
                 self.assertEqual(validate_project(Path("~/proj.json")), [])
 
     def test_model_constraints_and_blank_checks(self):
@@ -550,7 +550,7 @@ class TuiComprehensiveTests(unittest.IsolatedAsyncioTestCase):
         with tempfile.TemporaryDirectory() as tmp:
             p = Path(tmp) / "school.json"
             p.write_text(_make_project().model_dump_json(), encoding="utf-8")
-            with patch.dict(os.environ, {"HOME": tmp}):
+            with patch.dict(os.environ, {"HOME": tmp, "USERPROFILE": tmp}):
                 app = TimetableApp(Path("~/school.json"))
                 async with app.run_test(size=(100, 30)) as pilot:
                     await pilot.pause()

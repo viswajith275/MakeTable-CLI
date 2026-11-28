@@ -84,7 +84,7 @@ uv run python -m nuitka \
 #            --output-dir=dist\windows `
 #            --output-filename=timetable.exe `
 #            --lto=yes `
-#            --mingw64 `
+#            --msvc=latest `
 #            --windows-console-mode=force `
 #            --onefile-cache-mode=cached `
 #            --onefile-tempdir-spec="{CACHE_DIR}\timetable_app" `

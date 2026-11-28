@@ -33,6 +33,20 @@ curl -fsSL https://raw.githubusercontent.com/viswajith275/MakeTable-CLI/main/scr
 curl -fsSL https://raw.githubusercontent.com/viswajith275/MakeTable-CLI/main/scripts/uninstall.sh | bash
 ```
 
+### Prebuilt Binary (Windows PowerShell)
+
+<p>Install the <code>timetable</code> command:</p>
+
+```powershell
+irm https://raw.githubusercontent.com/viswajith275/MakeTable-CLI/main/scripts/install.ps1 | iex
+```
+
+<p>To uninstall:</p>
+
+```powershell
+irm https://raw.githubusercontent.com/viswajith275/MakeTable-CLI/main/scripts/uninstall.ps1 | iex
+```
+
 ### From Source
 
 <p>Requires Python 3.13+.</p>

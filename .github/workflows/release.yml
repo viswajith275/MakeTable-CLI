@@ -23,6 +23,9 @@ jobs:
           - target: macos-aarch64
             os: macos-latest
             output_dir: dist/macos
+          - target: windows-x86_64
+            os: windows-latest
+            output_dir: dist/windows
 
     steps:
       - name: Checkout repository
@@ -104,13 +107,60 @@ jobs:
             --remove-output \
             src/main.py
 
+      - name: Build compressed Windows binary
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          uv run python -m nuitka `
+            --onefile `
+            --include-package=maketable `
+            --include-package=pydantic `
+            --include-package=pydantic_core `
+            --include-package=textual `
+            --nofollow-import-to=matplotlib `
+            --nofollow-import-to=scipy `
+            --nofollow-import-to=pytest `
+            --nofollow-import-to=unittest `
+            --nofollow-import-to=ortools.linear_solver `
+            --nofollow-import-to=ortools.constraint_solver `
+            --nofollow-import-to=ortools.graph `
+            --nofollow-import-to=ortools.algorithms `
+            --nofollow-import-to=ortools.math_opt `
+            --nofollow-import-to=ortools.pdlp `
+            --nofollow-import-to=ortools.scheduling `
+            --assume-yes-for-downloads `
+            --output-dir=dist/windows `
+            --output-filename=timetable.exe `
+            --msvc=latest `
+            --lto=yes `
+            --windows-console-mode=force `
+            --onefile-cache-mode=cached `
+            --onefile-tempdir-spec="{CACHE_DIR}\timetable_app" `
+            --remove-output `
+            src/main.py
+
       - name: Smoke test binary
+        if: runner.os != 'Windows'
         run: |
           "./${{ matrix.output_dir }}/timetable" --help
           "./${{ matrix.output_dir }}/timetable" validate test_json.json
           "./${{ matrix.output_dir }}/timetable" generate test_json.json --fast -w 1 -f json >/dev/null
 
+      - name: Smoke test Windows binary
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $exe = "${{ matrix.output_dir }}/timetable.exe"
+          if (-not (Test-Path -LiteralPath $exe)) { throw "Missing $exe" }
+          & $exe --help
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & $exe validate test_json.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & $exe generate test_json.json --fast -w 1 -f json | Out-Null
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Package compressed release archive
+        if: runner.os != 'Windows'
         run: |
           mkdir -p release-assets
           archive_name="timetable-${{ matrix.target }}.tar.gz"
@@ -120,6 +170,17 @@ jobs:
           else
             (cd release-assets && shasum -a 256 "${archive_name}" > "${archive_name}.sha256")
           fi
+
+      - name: Package compressed Windows release archive
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path release-assets | Out-Null
+          $archiveName = "timetable-${{ matrix.target }}.zip"
+          $archivePath = "release-assets/$archiveName"
+          Compress-Archive -Path "${{ matrix.output_dir }}/timetable.exe" -DestinationPath $archivePath -CompressionLevel Optimal -Force
+          $hash = (Get-FileHash -Path $archivePath -Algorithm SHA256).Hash.ToLowerInvariant()
+          [System.IO.File]::WriteAllText("$archivePath.sha256", "$hash  $archiveName`n", [System.Text.UTF8Encoding]::new($false))
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
